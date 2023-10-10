@@ -22,6 +22,7 @@ const CreateAdvertisement = require("./src/Models/CreateAdvertisement");
 const VendorPageNameLocation = require("./src/Models/VendorPageModel");
 const Templates = require("./src/Models/templates");
 const Epaper = require("./src/Models/EpaperModel");
+const AdvertisementSetting = require("./src/Models/AdvertisementSetting");
 
 
 const port = process.env.PORT || 5000;
@@ -107,6 +108,7 @@ app.post(
         schedule_time,
         schedule_date,
         approved_by,
+        manual_tag,
         font,
         x_min,
         y_min,
@@ -132,6 +134,67 @@ app.post(
     }
   }
 );
+
+//======================[ update post Article ]========================/
+app.put(
+  "/UpdateArticle",
+  imageUpload.single("image"),
+  async (req, res) => {
+    try {
+      let userId = req.params.userId;
+      let data = req.body;
+      let articleId = req.body._id;
+
+      let file = req.file;
+      let {
+        category,
+        title,
+        sub_heading,
+        short_details,
+        body,
+        image,
+        url,
+        tags,
+        news_priority,
+        news_sections,
+        change_byline,
+        source,
+        isApproved,
+        isRejected,
+        remark,
+        author_name,
+        schedule_time,
+        schedule_date,
+        approved_by,
+        font,
+      } = data;
+
+      data.userId = userId;
+      if (file) {
+        data.image = `/image/${file.filename}`;
+      }
+      let updatedArticle = await PostArticleModel.findByIdAndUpdate(articleId, data
+      );
+      console.log(updatedArticle)
+
+      if (!updatedArticle) {
+        return res.status(404).send({
+          status: false,
+          message: "Article not found",
+        });
+      }
+
+      res.status(200).send({
+        status: true,
+        message: "Post News Updated Successfully",
+        data: updatedArticle,
+      });
+    } catch (err) {
+      res.status(500).send({ status: false, error: err.message });
+    }
+  }
+);
+
 
 //======================[ Get post news with Id ]=========================/
 
@@ -303,7 +366,7 @@ app.get("/:userId/get-draft-articles-vendor", async (req, res) => {
     let draftArticles = null
 
     if (await VendorModel.find({ userId })) {
-      draftArticles = await DraftModel.find({ userId });
+      draftArticles = await DraftModel.find({ userId: userId, isRejected: false, isApproved: false });
     }
 
     draftArticles = draftArticles.map(article => {
@@ -572,8 +635,15 @@ app.put("/:userId/update_publication", imageUpload.fields([
         .send({ status: false, message: "User not found" });
     }
 
+    if (newData.password) {
+
+      const hashedPassword = await bcrypt.hash(newData.password, 10);
+
+      existingPublication.password = hashedPassword;
+    }
+
     for (const key in newData) {
-      if (newData.hasOwnProperty(key)) {
+      if (key !== "password") {
         existingPublication[key] = newData[key];
       }
     }
@@ -586,6 +656,7 @@ app.put("/:userId/update_publication", imageUpload.fields([
         existingPublication.logo_small = `/image/${files.logo_small[0].filename}`;
       }
     }
+
     const updatedPublication = await existingPublication.save();
 
     const safePublicationDetails = { ...updatedPublication._doc };
@@ -750,7 +821,6 @@ app.get("/:userId/getApprovalVendor", Middleware.jwtValidation, Middleware.autho
           }
 
         }
-
         res.status(200).send({
           status: true,
           message: "Get Post News Successfully",
@@ -785,10 +855,8 @@ app.put("/:userId/RejectUpdateNews", Middleware.jwtValidation, Middleware.author
   try {
     let postNewsId = req.body._id;
     let data = req.body.remark;
-
     if (await PostArticleModel.findById({ _id: postNewsId })) {
       let News = await PostArticleModel.findById({ _id: postNewsId });
-
       if (News.isRejected == false) {
         var updateNews = await PostArticleModel.findByIdAndUpdate(
           { _id: postNewsId },
@@ -838,7 +906,6 @@ app.get("/:userId/getRejected", Middleware.jwtValidation, Middleware.authorizati
             let publication = await VendorModel.findById({ _id: postUserId }).lean();
             if (publication) {
               rejectedPosts[i].username = publication.publisher_name;
-              // console.log(publication.publisher_name);
             }
           }
         }
@@ -879,7 +946,7 @@ app.get("/:userId/getRejectedVendor", Middleware.jwtValidation, Middleware.autho
     const response = await PostArticleModel.find({ userId }).lean();
 
     if (response.length > 0) {
-      const rejectedPosts = response.filter((post) => post.isRejected && !post.isApproved);
+      const rejectedPosts = response.filter((post) => post.isRejected && !post.isApproved || post.isRejected && post.isRejected);
 
       if (rejectedPosts.length > 0) {
         for (let i = 0; i < rejectedPosts.length; i++) {
@@ -1439,6 +1506,40 @@ app.delete("/:userId/delete-advertisements", async (req, res) => {
   }
 });
 
+//======================[ Advertisement Setting ]=========================/
+app.post("/advertisementSettings", async (req, res) => {
+  try {
+    const {
+      userId,
+      vendor_name,
+      template,
+      page_name,
+      top_box,
+      below_category,
+      between_category,
+      footer,
+    } = req.body;
+
+    const advertisementSettings = new AdvertisementSetting({
+      userId,
+      vendor_name,
+      template,
+      page_name,
+      top_box,
+      below_category,
+      between_category,
+      footer,
+    });
+
+    await advertisementSettings.save();
+
+    res.status(201).json({ message: "AdvertisementSettings created successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 //====================== [ searching vendor ]==========================/
 app.get('/vendorModels', async (req, res) => {
   const publisher_name = req.query.publisher_name;
@@ -1576,7 +1677,9 @@ app.get('/:userId/Epapers', async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    const epapers = await Epaper.find({ userId });
+    const epapers = await Epaper.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean()
 
     if (!epapers) {
       return res.status(404).json({
@@ -1598,6 +1701,7 @@ app.get('/:userId/Epapers', async (req, res) => {
     });
   }
 });
+
 
 
 

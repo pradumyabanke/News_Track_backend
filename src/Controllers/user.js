@@ -289,56 +289,53 @@ const CreateArticle = async function (req, res) {
 
 //===================== [ Update Create Article ] =====================/
 
-const UpdatePostArticle = async function (req, res) {
-  try {
-    let userId = req.params.userId;
-    let data = req.body;
-    let articleId = req.body._id;
+// const UpdatePostArticle = async function (req, res) {
+//   try {
+//     let userId = req.params.userId;
+//     let data = req.body;
+//     let articleId = req.body._id;
 
-    let {
-      category,
-      title,
-      sub_heading,
-      short_details,
-      body,
-      image,
-      url,
-      tags,
-      news_priority,
-      news_sections,
-      change_byline,
-      source,
-      isApproved,
-      isRejected,
-      remark,
-      author_name,
-      schedule_time,
-      schedule_date,
-      approved_by,
-      font,
-    } = data;
+//     let {
+//       category,
+//       title,
+//       sub_heading,
+//       short_details,
+//       body,
+//       image,
+//       url,
+//       tags,
+//       news_priority,
+//       news_sections,
+//       change_byline,
+//       source,
+//       isApproved,
+//       isRejected,
+//       remark,
+//       author_name,
+//       schedule_time,
+//       schedule_date,
+//       approved_by,
+//       font,
+//     } = data;
 
+//     let updatedArticle = await PostArticleModel.findByIdAndUpdate(
+//       { _id: articleId, userId: userId },
+//       data,
+//       { new: true }
+//     );
 
-    let updatedArticle = await PostArticleModel.findByIdAndUpdate(
-      { _id: articleId, userId: userId },
-      data,
-      { new: true }
-    )
-
-    return res.status(200).send({
-      status: true,
-      message: "PostArticle Updated Successfully",
-      data: updatedArticle,
-    });
-
-  } catch (error) {
-    // Handle any errors that occur during the update or creation process
-    return res.status(500).send({
-      status: false,
-      error: "An error occurred",
-    });
-  }
-}
+//     return res.status(200).send({
+//       status: true,
+//       message: "PostArticle Updated Successfully",
+//       data: updatedArticle,
+//     });
+//   } catch (error) {
+//     return res.status(500).send({
+//       status: false,
+//       error: "An error occurred",
+//     });
+//   }
+// }
 
 //===================== [ Media type ] ========================/
 
@@ -497,15 +494,15 @@ const getPostNewsVendor = async (req, res) => {
 
     }
 
-    res.status(200).send({ 
-      success: true, 
-      msg: "Post News Get Success", 
-      data: allPosts 
+    res.status(200).send({
+      success: true,
+      msg: "Post News Get Success",
+      data: allPosts
     });
   } catch (error) {
-    res.status(500).send({ 
-      success: false, 
-      msg: error.message 
+    res.status(500).send({
+      success: false,
+      msg: error.message
     });
   }
 
@@ -661,6 +658,13 @@ const Roll_CreationModel = async function (req, res) {
     } = data;
     data.userId = userId;
 
+    const filteredData = {};
+    for (const key in data) {
+      if (data[key] === true) {
+        filteredData[key] = true;
+      }
+    }
+
     if (await RollCreation.findOne({ role_name: role_name }))
       return res.status(400).send({ message: "This Role name already exists" })
 
@@ -694,6 +698,138 @@ const getAllRoles = async function (req, res) {
     res.status(500).send({ status: false, error: err.message });
   }
 };
+
+
+//======================[ get list rolles ]======================//
+
+const getAllroleslist = async function (req, res) {
+  try {
+    let userId = req.params.userId;
+
+    let getRolls = await RollCreation.find({ userId: userId }).lean();
+    console.log(getRolls)
+    getRolls = getRolls.map(roll => {
+      const filteredRoll = {
+        role_name: roll.role_name,
+      };
+      for (const key in roll) {
+        if (key !== '_id' && key !== 'userId' && roll[key] === true) {
+          filteredRoll[key] = true;
+        }
+      }
+      return filteredRoll;
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "Get Rolls successfully",
+      data: getRolls,
+    });
+
+  } catch (err) {
+    res.status(500).send({ status: false, error: err.message });
+  }
+};
+
+//======================[ Role base Login ]==========================//
+
+const RollbaseLogin = async function (req, res) {
+  try {
+    let data = req.body;
+    let userId = req.params.userId;
+    let { email, password } = data;
+
+    let userExists = await VendorModel.findOne({ _id: userId, email: email });
+
+    if (!userExists) {
+      return res.status(400).send({
+        status: false,
+        msg: "Email and Password is Invalid",
+      });
+    }
+
+    let compared = await bcrypt.compare(password, userExists.password);
+    if (!compared) {
+      return res.status(400).send({
+        status: false,
+        message: "Your password is invalid",
+      });
+    }
+
+    var token = jwt.sign(
+      {
+        userId: userExists._id,
+      },
+      "project"
+    );
+
+    let updateToken = await VendorModel.findByIdAndUpdate(
+      { _id: userExists._id },
+      { token },
+      { new: true }
+    );
+    userExists.token = updateToken.token;
+
+    return res.status(200).send({
+      status: true,
+      msg: "News Paper Agency Login successfully",
+      data: userExists,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      status: false,
+      msg: error.message,
+    });
+  }
+};
+
+//======================[ update Role base ]==========================//
+
+const updateRollBase = async function (req, res) {
+  try {
+    const userId = req.params.userId; 
+    const updateData = req.body;
+
+    const updatedRole = await RollCreation.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
+
+    if (!updatedRole) {
+      return res.status(404).send({ message: "Role not found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Role updated successfully",
+      data: updatedRole,
+    });
+  } catch (err) {
+    res.status(500).send({ status: false, error: err.message });
+  }
+};
+
+//======================[ delete Role base ]==========================//
+
+const deleteRollBase = async function (req, res) {
+  try {
+    const userId = req.params.userId; 
+
+    const deletedRole = await RollCreation.findByIdAndDelete(userId);
+
+    if (!deletedRole) {
+      return res.status(404).send({ message: "Role not found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Role deleted successfully",
+      data: deletedRole,
+    });
+  } catch (err) {
+    res.status(500).send({ status: false, error: err.message });
+  }
+};
+
 
 //************************* [ Master Part ]***********************/
 
@@ -1256,10 +1392,14 @@ module.exports = {
   StatusModel,
   updateScheduleDateTime,
   AddRolesModel,
-  UpdatePostArticle,
+  // UpdatePostArticle,
   getPostNewsVendor,
+  RollbaseLogin,
   Roll_CreationModel,
   getAllRoles,
+  getAllroleslist,
+  updateRollBase,
+  deleteRollBase,
   MasterCategories,
   Mastercategories,
   GetMasterCategoryById,

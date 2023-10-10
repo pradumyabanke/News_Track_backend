@@ -30,6 +30,7 @@ const PostArticleSchema = new mongoose.Schema({
     page_number: { type: Number, require: true },
     pdf_name: { type: String, require: true },
     date: { type: String, require: true },
+    manual_tag: { type: String, require: true },
 
 
 }, { timestamps: true });

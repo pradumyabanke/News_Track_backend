@@ -4,6 +4,7 @@ const ROllCreationModelSchema = new mongoose.Schema(
     {
         userId: { type: String },
         role_name: { type: String, required: true },
+
         Upload_E_Paper: { type: Boolean, default: false },
         View_E_Paper: { type: Boolean, default: false },
         Publish_E_Paper: { type: Boolean, default: false },
@@ -42,11 +43,8 @@ const ROllCreationModelSchema = new mongoose.Schema(
         Meta_Parameters_for_categories: { type: Boolean, default: false },
         RSS_Feed_Generation: { type: Boolean, default: false },
         Site_Map_Generation: { type: Boolean, default: false },
-
         Reports: { type: Boolean, default: false },
-
         Analytics: { type: Boolean, default: false },
-
         Social_Media: { type: Boolean, default: false },
 
         Revenue_Input_for_each_partner: { type: Boolean, default: false },

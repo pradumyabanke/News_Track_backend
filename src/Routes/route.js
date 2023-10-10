@@ -12,7 +12,7 @@ Router.post("/createCategories", Controller.CreateCategories)
 Router.post("/createSubCategories", Controller.CreateSubCategories)
 Router.post("/language", Controller.UserLanguage)
 Router.post("/article", Controller.CreateArticle)
-Router.put("/UpdateArticle", Controller.UpdatePostArticle)
+// Router.put("/UpdateArticle", Controller.UpdatePostArticle)
 Router.post("/mediaType", Controller.createMediaModel)
 Router.get("/get-states", Controller.getState)
 Router.post("/check-box", Controller.CheckBox)
@@ -24,8 +24,12 @@ Router.get("/:userId/postGetVendor", Controller.getPostNewsVendor)
 Router.put("/:userId/postUpdate", Controller.updatePostNews);
 Router.put("/:userId/UpdateDateTime", Controller.updateScheduleDateTime);
 Router.post("/:userId/addroles", Middleware.jwtValidation, Middleware.authorization, Controller.AddRolesModel);
-Router.post("/:userId/roll-creation", Controller.Roll_CreationModel);
-Router.get("/:userId/getAllRoles", Controller.getAllRoles);
+Router.post("/:userId/RollbaseLogin", Controller.RollbaseLogin)
+Router.post("/:userId/roll-creation",Middleware.jwtValidation, Middleware.authorization, Controller.Roll_CreationModel);
+Router.get("/:userId/getAllRoles",Middleware.jwtValidation, Middleware.authorization, Controller.getAllRoles);
+Router.get("/:userId/getAllroleslist",Middleware.jwtValidation, Middleware.authorization, Controller.getAllroleslist);
+Router.put("/:userId/updateRollBase", Controller.updateRollBase);
+Router.delete("/:userId/deleteRollBase", Controller.deleteRollBase);
 Router.post("/mastercategories", Controller.MasterCategories);
 Router.post("/masterCategories", Controller.Mastercategories);
 Router.get("/:userId/getmasterCategories", Controller.GetMasterCategoryById);
