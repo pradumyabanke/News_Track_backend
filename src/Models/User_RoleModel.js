@@ -13,9 +13,9 @@ const UserRoleSchema = new mongoose.Schema({
     byline: { type: String, require: true },
     display_name: { type: String, require: true },
     mobile_1: { type: Number, required: true, unique: true },
-    email_1: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
     mobile_2: { type: Number, required: true, unique: true },
-    email_2: { type: String, required: true, unique: true },
+    email_1: { type: String, required: true, unique: true },
     address: { type: String, required: true },
     state: { type: String, required: true },
     city: { type: String, required: true },
@@ -30,4 +30,5 @@ const UserRoleSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model("UserRole", UserRoleSchema)
+
+module.exports = mongoose.model("RoleManagement", UserRoleSchema)

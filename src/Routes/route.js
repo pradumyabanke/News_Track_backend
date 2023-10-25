@@ -24,25 +24,22 @@ Router.get("/:userId/postGetVendor", Controller.getPostNewsVendor)
 Router.put("/:userId/postUpdate", Controller.updatePostNews);
 Router.put("/:userId/UpdateDateTime", Controller.updateScheduleDateTime);
 Router.post("/:userId/addroles", Middleware.jwtValidation, Middleware.authorization, Controller.AddRolesModel);
-Router.post("/:userId/RollbaseLogin", Controller.RollbaseLogin)
-Router.post("/:userId/roll-creation",Middleware.jwtValidation, Middleware.authorization, Controller.Roll_CreationModel);
-Router.get("/:userId/getAllRoles",Middleware.jwtValidation, Middleware.authorization, Controller.getAllRoles);
-Router.get("/:userId/getAllroleslist",Middleware.jwtValidation, Middleware.authorization, Controller.getAllroleslist);
+Router.post("/:userId/RollbaseLogin",Middleware.jwtValidation, Middleware.authorization, Controller.RollbaseLogin)
+Router.post("/:userId/roll-creation", Middleware.jwtValidation, Middleware.authorization, Controller.Roll_CreationModel);
+Router.get("/:userId/getAllRoles", Middleware.jwtValidation, Middleware.authorization, Controller.getAllRoles);
+Router.get("/:userId/getAllroleslist", Middleware.jwtValidation, Middleware.authorization, Controller.getAllroleslist);
 Router.put("/:userId/updateRollBase", Controller.updateRollBase);
 Router.delete("/:userId/deleteRollBase", Controller.deleteRollBase);
 Router.post("/mastercategories", Controller.MasterCategories);
 Router.post("/masterCategories", Controller.Mastercategories);
 Router.get("/:userId/getmasterCategories", Controller.GetMasterCategoryById);
 Router.post("/mastertag", Controller.MasterTag);
-Router.post("/masterlocation", Controller.MasterLocation);
 Router.get("/getmastercategories", Controller.GetMasterCategories);
 Router.get("/getmastertag", Controller.GetMasterTag);
-Router.get("/getmasterlocation", Controller.GetMasterLocation);
 Router.put("/:userId/updateCategories", Controller.UpdateMasterCategory);
 Router.delete("/:userId/deleteCategories", Controller.DeleteMasterCategory);
 Router.put("/:userId/updateTag", Controller.UpdateTag);
 Router.delete("/:userId/deleteTag", Controller.DeleteTag);
-
 
 
 Router.use(bodyParser.json());

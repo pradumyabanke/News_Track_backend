@@ -20,7 +20,7 @@ const DraftModel = require("../Models/DraftModel");
 const RollCreation = require("../Models/Roll_CreationModel");
 const masterCategories = require("../Models/MasterCategories");
 const masterTag = require("../Models/MasterTagModel");
-const masterLocation = require("../Models/MasterLocation");
+const CountryState = require("../Models/Country-State");
 
 
 
@@ -123,6 +123,54 @@ const userLogin = async function (req, res) {
 
 //===================== [ News Paper Agency Login ] =====================/
 
+// const NewsPaperAgencyLogin = async function (req, res) {
+//   try {
+//     let data = req.body;
+//     let { email, password } = data;
+
+//     let userExists = await VendorModel.findOne({ email: email });
+
+//     if (!userExists) {
+//       return res.status(400).send({
+//         status: false,
+//         msg: "Email and Password is Invalid",
+//       });
+//     }
+
+//     let compared = await bcrypt.compare(password, userExists.password);
+//     if (!compared) {
+//       return res.status(400).send({
+//         status: false,
+//         message: "Your password is invalid",
+//       });
+//     }
+
+//     var token = jwt.sign(
+//       {
+//         userId: userExists._id,
+//       },
+//       "project"
+//     );
+
+// let updateToken = await VendorModel.findByIdAndUpdate(
+//   { _id: userExists._id },
+//   { token },
+//   { new: true }
+// );
+// userExists.token = updateToken.token;
+
+// return res.status(200).send({
+//   status: true,
+//   msg: "News Paper Agency Login successfully",
+//   data: userExists,
+// });
+//   } catch (error) {
+//     return res.status(500).send({
+//       status: false,
+//       msg: error.message,
+//     });
+//   }
+// };
 const NewsPaperAgencyLogin = async function (req, res) {
   try {
     let data = req.body;
@@ -131,13 +179,58 @@ const NewsPaperAgencyLogin = async function (req, res) {
     let userExists = await VendorModel.findOne({ email: email });
 
     if (!userExists) {
-      return res.status(400).send({
-        status: false,
-        msg: "Email and Password is Invalid",
-      });
+      let userRole = await UserRoleModel.findOne({ email: email });
+      let userId = req.query.userId;
+      if (!userRole) {
+        return res.status(400).send({
+          status: false,
+          msg: "Email and Password is Invalid",
+        });
+      }
+
+      let compared = await bcrypt.compare(password, userRole.password);
+
+      if (!compared) {
+        return res.status(400).send({
+          status: false,
+          message: "Your password is invalid",
+        });
+      }
+
+      var token = jwt.sign(
+        {
+          userId: userRole._id,
+        },
+        "project"
+      );
+      let updateToken = await UserRoleModel.findByIdAndUpdate(
+        { _id: userRole._id },
+        { token },
+        { new: true }
+      );
+      userRole.token = updateToken.token;
+
+      const role = userRole.user_role;
+      if (roleAssign = await RollCreation.findOne({ userId: userId, role_name: role, })) {
+        const AssignRole = roleAssign.role_name;
+        if (role === roleAssign.role_name) {
+          return res.status(200).send({
+            status: true,
+            msg: `Role Management Login Success And Permission To Access Role '${AssignRole}'`,
+            data: userRole,
+          });
+        }
+      } else {
+        return res.status(200).send({
+          status: true,
+          msg: "Role Management Login Success No Access For Role To This User",
+          data: userRole
+        });
+      }
     }
 
     let compared = await bcrypt.compare(password, userExists.password);
+
     if (!compared) {
       return res.status(400).send({
         status: false,
@@ -191,7 +284,6 @@ const CreatePlateform = async function (req, res) {
   }
 };
 
-
 //===================== [ Create Categories ] =====================/
 
 const CreateCategories = async function (req, res) {
@@ -209,7 +301,6 @@ const CreateCategories = async function (req, res) {
     res.status(500).send({ status: false, error: err.message });
   }
 };
-
 
 //===================== [ Create SubCategories ] =====================/
 
@@ -400,7 +491,7 @@ const SelectCategories = async function (req, res) {
 const getState = async (req, res) => {
   try {
     let country = req.body;
-    const city = await StateModel.find(country);
+    const city = await CountryState.find();
 
     res
       .status(200)
@@ -409,7 +500,6 @@ const getState = async (req, res) => {
     res.status(500).send({ success: false, msg: error.message });
   }
 };
-
 
 //===================== [ Status Model ] =====================/
 
@@ -478,8 +568,6 @@ const getPostNewsVendor = async (req, res) => {
       const postUserId = allPosts[i].userId;
       // console.log(postUserId);
 
-      // Retrieve SuperAdmin by ID
-
       let user = await SuperAdmin.findById({ _id: postUserId });
       if (user) {
         allPosts[i].username = user.name;
@@ -507,7 +595,6 @@ const getPostNewsVendor = async (req, res) => {
   }
 
 };
-
 
 //==================== [ Update Post News ] ======================/
 
@@ -731,15 +818,17 @@ const getAllroleslist = async function (req, res) {
   }
 };
 
+
 //======================[ Role base Login ]==========================//
 
 const RollbaseLogin = async function (req, res) {
   try {
     let data = req.body;
     let userId = req.params.userId;
+    let role_name = req.query.role_name;
     let { email, password } = data;
 
-    let userExists = await VendorModel.findOne({ _id: userId, email: email });
+    let userExists = await UserRoleModel.findOne({ _id: userId, email: email });
 
     if (!userExists) {
       return res.status(400).send({
@@ -763,17 +852,32 @@ const RollbaseLogin = async function (req, res) {
       "project"
     );
 
-    let updateToken = await VendorModel.findByIdAndUpdate(
+    let updateToken = await UserRoleModel.findByIdAndUpdate(
       { _id: userExists._id },
       { token },
       { new: true }
     );
     userExists.token = updateToken.token;
+    let getRolls = await RollCreation.find({ userId: userId, role_name: role_name }).lean();
+    getRolls = getRolls.map(roll => {
+      const filteredRoll = {
+        role_name: roll.role_name,
+      };
+      for (const key in roll) {
+        if (key !== '_id' && key !== 'userId' && roll[key] === true) {
+          filteredRoll[key] = true;
+        }
+      }
+      return filteredRoll;
+    });
 
-    return res.status(200).send({
+    return res.status(200).json({
       status: true,
-      msg: "News Paper Agency Login successfully",
-      data: userExists,
+      msg: "News Paper Agency Login and Get Rolls successfully",
+      data: {
+        user: userExists,
+        role: getRolls,
+      },
     });
   } catch (error) {
     return res.status(500).send({
@@ -783,11 +887,12 @@ const RollbaseLogin = async function (req, res) {
   }
 };
 
+
 //======================[ update Role base ]==========================//
 
 const updateRollBase = async function (req, res) {
   try {
-    const userId = req.params.userId; 
+    const userId = req.params.userId;
     const updateData = req.body;
 
     const updatedRole = await RollCreation.findByIdAndUpdate(userId, updateData, {
@@ -812,7 +917,7 @@ const updateRollBase = async function (req, res) {
 
 const deleteRollBase = async function (req, res) {
   try {
-    const userId = req.params.userId; 
+    const userId = req.params.userId;
 
     const deletedRole = await RollCreation.findByIdAndDelete(userId);
 
@@ -831,7 +936,7 @@ const deleteRollBase = async function (req, res) {
 };
 
 
-//************************* [ Master Part ]***********************/
+//**************************[ Master Part ]***********************/
 
 
 //================= [ Master Categories ] ==================/
@@ -891,7 +996,6 @@ const GetMasterCategoryById = async function (req, res) {
     });
   }
 };
-
 
 //================= [ Update Master Categories ] ==================/
 
@@ -1059,91 +1163,6 @@ const DeleteTag = async function (req, res) {
 
 //================= [ Master Location ] ===================/
 
-const MasterLocation = async function (req, res) {
-  try {
-    let data = req.body;
-    let { countries, states, division, district, sub_division, tahsil, town, Hindi, English, url } = data;
-
-    let existingCountry = await masterLocation.findOne({ 'countries.name': countries.name });
-    console.log(existingCountry)
-
-    if (existingCountry) {
-      if (existingCountry.countries[0].states) {
-        let existingState = existingCountry.countries[0].states.find(state => state.name === states);
-
-        console.log(existingState)
-        if (!existingState) {
-          existingState = { name: states, divisions: [] };
-          existingCountry.states.push(existingState);
-          await existingCountry.save();
-        }
-      }
-    } else {
-      existingCountry = await masterLocation.create({ countries: { name: countries.name, states: [] } });
-
-    }
-
-    // let existingState = existingCountry.countries[0].states.find(state => state.name === states.name);
-    // console.log(existingState)
-    // if (!existingState) {
-    //   existingState = { name: states, divisions: [] };
-    //   existingCountry.states.push(existingState);
-    //   await existingCountry.save();
-    // }
-
-    // let existingDivision = existingState.divisions.find(div => div.name === division);
-
-    // if (!existingDivision) {
-    //   existingDivision = { name: division, districts: [] };
-    //   existingState.divisions.push(existingDivision);
-    //   await existingCountry.save();
-    // }
-
-    // let existingDistrict = existingDivision.districts.find(dist => dist.name === district);
-
-    // if (!existingDistrict) {
-    //   existingDistrict = { name: district, sub_divisions: [] };
-    //   existingDivision.districts.push(existingDistrict);
-    //   await existingCountry.save();
-    // }
-
-    // let existingSubDivision = existingDistrict.sub_divisions.find(subDiv => subDiv.name === sub_division);
-
-    // if (!existingSubDivision) {
-    //   existingSubDivision = { name: sub_division, tahsil: [] };
-    //   existingDistrict.sub_divisions.push(existingSubDivision);
-    //   await existingCountry.save();
-    // }
-
-    // let existingTahsil = existingSubDivision.tahsil.find(tah => tah.name === tahsil);
-
-    // if (!existingTahsil) {
-    //   existingTahsil = { name: tahsil, towns: [] };
-    //   existingSubDivision.tahsil.push(existingTahsil);
-    //   await existingCountry.save();
-    // }
-
-    // let existingTown = existingTahsil.towns.find(twn => twn.name === town);
-
-    // if (!existingTown) {
-    //   existingTown = { name: town, Hindi, English, url };
-    //   existingTahsil.towns.push(existingTown);
-    //   await existingCountry.save();
-    // }
-
-    return res.status(201).json({
-      status: true,
-      message: "Location created successfully",
-      data: existingState,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      status: false,
-      message: error.message,
-    });
-  }
-
-};
 
 //================= [ Get Master Categories ] ============/
 
@@ -1185,193 +1204,6 @@ const GetMasterTag = async function (req, res) {
   }
 };
 
-//================= [ Get Master Location ] ==============/
-
-// const GetMasterLocation = async (req, res)=> {
-//   const { country } = req.query;
-
-//   if (!country) {
-//     return res.status(400).json({ error: 'Country parameter is missing.' });
-//   }
-
-//   try {
-//     const locations = await masterLocation.find({ countries: country });
-
-//     if (locations.length === 0) {
-//       return res.status(404).json({ error: 'Country not found.' });
-//     }
-
-//     // Extract states and cities from the locations
-//     const states = locations.map(location => location.states);
-//     const cities = locations.map(location => location.Town);
-
-//     res.json({ states, cities });
-//   } catch (error) {
-//     console.error('Error:', error);
-//     res.status(500).json({ error: 'Internal server error.' });
-//   }
-// };
-
-// const GetMasterLocation = async (req, res) => {
-//   try {
-//     let { country, state, division, district, sub_division, tahsil, town } = req.query;
-//     console.log(req.query)
-//     if (!country) {
-//       return res.status(400).json({ message: "Country parameter is required" });
-//     }
-
-//     let location = await masterLocation.findOne({
-//       "countries.name": country,
-//     });
-
-//     if (!location) {
-//       location = new MasterLocation({
-//         countries: {
-//           name: country,
-//           states: []
-//         }
-//       });
-//     }
-
-//     if (!state && !division && !district && !sub_division && !tahsil && !town) {
-//       const newState = {
-//         name: state,
-//         division: [
-//           {
-//             name: division,
-//             district: [
-//               {
-//                 name: district,
-//                 sub_division: [
-//                   {
-//                     name: sub_division,
-//                     tahsil: [
-//                       {
-//                         name: tahsil,
-//                         town: [
-//                           {
-//                             name: town
-//                           }
-//                         ]
-//                       }
-//                     ]
-//                   }
-//                 ]
-//               }
-//             ]
-//           }
-//         ]
-//       };
-
-//       location.countries.states.push(newState);
-//     }
-
-//     await location.save();
-
-//     res.json(location);
-//   } catch (error) {
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-const GetMasterLocation = async (req, res) => {
-  try {
-    let {
-      country,
-      states,
-      division,
-      district,
-      sub_division,
-      tahsil,
-      town
-    } = req.query;
-
-    if (!country) {
-      return res.status(400).json({ message: "Country parameter is required" });
-    }
-
-    let location = await masterLocation.findOne({
-      "countries.name": country,
-    });
-
-    if (!location) {
-      location = await masterLocation({
-        countries: {
-          name: country,
-          states: []
-        }
-      });
-    }
-
-    // Check if state exists
-    let stateObj = location.countries.states.find(s => s.name === states);
-    // console.log(stateObj)
-    if (!stateObj) {
-      stateObj = {
-        name: states,
-        division: []
-      };
-      location.countries.states.push(stateObj);
-    }
-
-    // Check if division exists
-    let divisionObj = stateObj.division.find(d => d.name === division);
-    if (!divisionObj) {
-      divisionObj = {
-        name: division,
-        district: []
-      };
-      stateObj.division.push(divisionObj);
-    }
-
-    // Check if district exists
-    let districtObj = divisionObj.district.find(dist => dist.name === district);
-    if (!districtObj) {
-      districtObj = {
-        name: district,
-        sub_division: []
-      };
-      divisionObj.district.push(districtObj);
-    }
-
-    // Check if sub-division exists
-    let subDivisionObj = districtObj.sub_division.find(subDiv => subDiv.name === sub_division);
-    if (!subDivisionObj) {
-      subDivisionObj = {
-        name: sub_division,
-        tahsil: []
-      };
-      districtObj.sub_division.push(subDivisionObj);
-    }
-
-    // Check if tahsil exists
-    let tahsilObj = subDivisionObj.tahsil.find(tah => tah.name === tahsil);
-    if (!tahsilObj) {
-      tahsilObj = {
-        name: tahsil,
-        town: []
-      };
-      subDivisionObj.tahsil.push(tahsilObj);
-    }
-
-    // Check if town exists
-    let townObj = tahsilObj.town.find(twn => twn.name === town);
-    if (!townObj) {
-      townObj = {
-        name: town
-      };
-      tahsilObj.town.push(townObj);
-    }
-
-    await location.save();
-
-    res.json(location);
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-
 
 
 module.exports = {
@@ -1403,11 +1235,9 @@ module.exports = {
   MasterCategories,
   Mastercategories,
   GetMasterCategoryById,
-  MasterLocation,
   MasterTag,
   GetMasterCategories,
   GetMasterTag,
-  GetMasterLocation,
   UpdateMasterCategory,
   DeleteMasterCategory,
   UpdateTag,

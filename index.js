@@ -13,7 +13,7 @@ const Middleware = require("./src/Middleware/auth");
 const UserRoleModel = require("./src/Models/User_RoleModel");
 const PostArticleModel = require("./src/Models/PostArticleModel");
 const VendorModel = require("./src/Models/VendorModel");
-const Addrolesmodel = require("./src/Models/Add_RolesModel");
+const RollCreation = require("./src/Models/Roll_CreationModel");
 const SuperAdmin = require("./src/Models/SuperAdmin");
 const DraftModel = require("./src/Models/DraftModel");
 const StateModel = require("./src/Models/StateModel");
@@ -23,6 +23,9 @@ const VendorPageNameLocation = require("./src/Models/VendorPageModel");
 const Templates = require("./src/Models/templates");
 const Epaper = require("./src/Models/EpaperModel");
 const AdvertisementSetting = require("./src/Models/AdvertisementSetting");
+const LocationModel = require("./src/Models/StateModel");
+const MasterCategories = require("./src/Models/MasterCategories");
+const MasterTag = require("./src/Models/MasterTagModel");
 
 
 const port = process.env.PORT || 5000;
@@ -195,7 +198,6 @@ app.put(
   }
 );
 
-
 //======================[ Get post news with Id ]=========================/
 
 app.get("/:_id/get-post-news", async (req, res) => {
@@ -244,9 +246,6 @@ app.get("/:userId/get-Postnews/:category", async (req, res) => {
 
     const currentDate = `${year}-${month}-${day}`
     const currentTime = `${hours}:${minutes}`;
-
-    console.log(currentDate, "bbbb")
-    console.log(currentTime, "aaaa")
 
     data.userId = userId;
     if (file) {
@@ -429,8 +428,8 @@ app.post("/user-role", imageUpload.single("user_image"), async (req, res) => {
       city,
       mobile_1,
       mobile_2,
+      email,
       email_1,
-      email_2,
       user_image,
       user_BIO,
       social_facebook,
@@ -444,20 +443,20 @@ app.post("/user-role", imageUpload.single("user_image"), async (req, res) => {
         .status(400)
         .send({ status: false, message: "Mobile_1 already exist" });
 
-    if (await UserRoleModel.findOne({ email_1: email_1 }))
+    if (await UserRoleModel.findOne({ email: email }))
       return res
         .status(400)
-        .send({ status: false, message: "Email_1 already exist" });
+        .send({ status: false, message: "Email already exist" });
 
     if (await UserRoleModel.findOne({ mobile_2: mobile_2 }))
       return res
         .status(400)
         .send({ status: false, message: "Mobile_2 already exist" });
 
-    if (await UserRoleModel.findOne({ email_2: email_2 }))
+    if (await UserRoleModel.findOne({ email_1: email_1 }))
       return res
         .status(400)
-        .send({ status: false, message: "Email_2 already exist" });
+        .send({ status: false, message: "Email_1 already exist" });
 
     const encryptedPassword = bcrypt.hashSync(password, 12);
     req.body["password"] = encryptedPassword;
@@ -494,8 +493,8 @@ app.post("/user-role", imageUpload.single("user_image"), async (req, res) => {
         city: savedData.city,
         mobile_1: savedData.mobile_1,
         mobile_2: savedData.mobile_2,
+        email: savedData.email,
         email_1: savedData.email_1,
-        email_2: savedData.email_2,
         user_image: savedData.user_image,
         user_BIO: savedData.user_BIO,
         social_facebook: savedData.social_facebook,
@@ -1320,6 +1319,8 @@ app.patch('/update-categories/:id', async (req, res) => {
 app.use("/image", express.static("./uploads/image"))
 app.post(
   "/:userId/create-advertisement",
+  Middleware.jwtValidation,
+  Middleware.authorization,
   imageUpload.single("image"),
   async (req, res) => {
     try {
@@ -1355,36 +1356,101 @@ app.post(
 
 //========================[ Get Advertisement ]====================/
 
+// app.get("/:userId/:page_name/:page_location/get-Advertisement", async (req, res) => {
+//   try {
+//     let page_name = req.params.page_name;
+//     let page_location = req.params.page_location;
+//     let userId = req.params.userId;
+//     let file = req.file;
+//     let data = req.body;
+//     const post = await CreateAdvertisement.find({ userId: userId, page_name: page_name, page_location: page_location })
+//       .sort({ createdAt: -1 })
+//       .limit(1)
+//       .lean();
+
+//     if (!post || post.length === 0) {
+//       const defaultAds = await CreateAdvertisement.find({ userId: "null" }).lean();
+
+//       if (defaultAds && defaultAds.length > 0) {
+//         const randomDefaultAd = defaultAds[Math.floor(Math.random() * defaultAds.length)];
+
+//         res.status(200).send({ status: true, data: randomDefaultAd });
+//       } else {
+//         res.status(404).send({ status: false, message: "Default ad not found" });
+//       }
+//     } else {
+//       data.userId = userId;
+//       if (file) {
+//         data.image = `/image/${file.filename}`;
+//       }
+//       post[0].data = data;
+
+//       res.status(200).send({ status: true, data: post });
+//     }
+//   } catch (err) {
+//     res.status(500).send({ status: false, error: err.message });
+//   }
+// });
+
+
 app.get("/:userId/:page_name/:page_location/get-Advertisement", async (req, res) => {
   try {
-    let page_name = req.params.page_name;
-    let page_location = req.params.page_location;
-    let data = req.body;
-    let userId = req.params.userId;
-    let file = req.file;
+    const page_name = req.params.page_name;
+    const page_location = req.params.page_location;
+    const userId = req.params.userId;
+    const file = req.file;
+    const data = req.body;
+
     const post = await CreateAdvertisement.find({ userId: userId, page_name: page_name, page_location: page_location })
       .sort({ createdAt: -1 })
       .limit(1)
       .lean();
 
-    if (!post) {
-      return res.status(404).send({ status: false, message: "Post not found" });
-    }
+    if (!post || post.length === 0) {
+      const createAd = await CreateAdvertisement.find();
+      const CreateAdUserIds = createAd.map((user) => user.userId);
+      console.log(CreateAdUserIds);
 
-    data.userId = userId;
-    if (file) {
-      data.image = `/image/${file.filename}`;
-    }
+      const superAdminUsers = await SuperAdmin.find();
+      const superAdminUserIds = superAdminUsers.map((user) => user._id);
+      console.log(superAdminUserIds);
 
-    res.status(200).send({ status: true, data: post });
+      const matchedUserId = CreateAdUserIds.find(userId => superAdminUserIds.includes(userId));
+      if (matchedUserId) {
+        const defaultAd = await CreateAdvertisement.findOne({ userId: matchedUserId }).lean();
+
+        if (defaultAd) {
+          const randomDefaultAd = defaultAd;
+          if (file) {
+            randomDefaultAd.image = `/image/${file.filename}`;
+          }
+          randomDefaultAd.data = data;
+
+          res.status(200).send({ status: true, data: randomDefaultAd });
+        } else {
+          res.status(404).send({ status: false, message: "Default ad not found" });
+        }
+      } else {
+        res.status(404).send({ status: false, message: "User and default ad not found" });
+      }
+    } else {
+      data.userId = userId;
+      if (file) {
+        data.image = `/image/${file.filename}`;
+      }
+      post[0].data = data;
+
+      res.status(200).send({ status: true, data: post });
+    }
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
 });
 
+
 //=======================[ vendor post pageName & pageLocation ]========
 
-app.post("/:userId/vendorPageNameLocations", async (req, res) => {
+app.post("/:userId/vendorPageNameLocations", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
     let userId = req.params.userId;
     let data = req.body;
@@ -1396,7 +1462,7 @@ app.post("/:userId/vendorPageNameLocations", async (req, res) => {
     if (existingAdvertisement) {
       return res.status(409).send({
         status: false,
-        message: "Vendor Permission Allready set ",
+        message: "Vendor Permission Allready set",
       });
     }
 
@@ -1415,7 +1481,7 @@ app.post("/:userId/vendorPageNameLocations", async (req, res) => {
 
 //=======================[ Get vendor post pageName & pageLocation ]========
 
-app.get("/:userId/getvendorPageNameLocations", async (req, res) => {
+app.get("/:userId/getvendorPageNameLocations", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
     const userId = req.params.userId;
     const vendorPageNameLocations = await VendorPageNameLocation.find({ userId });
@@ -1433,16 +1499,73 @@ app.get("/:userId/getvendorPageNameLocations", async (req, res) => {
 
 //====================== [ list of advertisement Id ]=====================/
 
-app.get("/:userId/listadvertisements", async (req, res) => {
+// app.get("/listadvertisements", async (req, res) => {
+//   try {
+//     const advertisements = await CreateAdvertisement.find();
+
+//     const userIds = [...new Set(advertisements.map(ad => ad.userId))];
+
+//     const publishers = await VendorModel.find({ _id: { $in: userIds } });
+//     const superAdminNames = await SuperAdmin.find({ _id: { $in: userIds } });
+
+//     const userIdToPublisherData = {};
+//     publishers.forEach(item => {
+//       userIdToPublisherData[item._id] = {
+//         publisher_name: item.publisher_name,
+//         templates: item.templates,
+//       };
+//     });
+
+//     const userIdToSuperAdminName = {};
+//     superAdminNames.forEach(item => {
+//       userIdToSuperAdminName[item._id] = item.name;
+//     });
+
+//     const advertisementsWithPublisherAndSuperAdmin = advertisements.map(ad => {
+//       const publisherData = userIdToPublisherData[ad.userId];
+//       const superAdminName = userIdToSuperAdminName[ad.userId];
+//       const data = { ...ad._doc };
+
+//       if (publisherData) {
+//         data.publisher_name = publisherData.publisher_name;
+//         data.templates = publisherData.templates;
+//       }
+
+//       if (superAdminName) {
+//         data.Admin_name = superAdminName;
+//       }
+
+//       return data;
+//     });
+
+//     res.status(200).send({
+//       status: true,
+//       message: "Advertisements retrieved Successfully",
+//       data: advertisementsWithPublisherAndSuperAdmin,
+//     });
+//   } catch (err) {
+//     res.status(500).send({ status: false, error: err.message });
+//   }
+// });
+
+app.get("/:userId/listadvertisements", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
     const userId = req.params.userId;
-    const advertisements = await CreateAdvertisement.find({ userId }); // Assuming your model name is CreateAdvertisement
 
-    res.status(200).send({
-      status: true,
-      message: "Advertisements retrieved successfully",
-      data: advertisements,
-    });
+    const advertisements = await CreateAdvertisement.find({ userId });
+
+    if (advertisements.length === 0) {
+      res.status(404).send({
+        status: false,
+        message: "No advertisements found for the specified user.",
+      });
+    } else {
+      res.status(200).send({
+        status: true,
+        message: "Advertisements retrieved successfully",
+        data: advertisements,
+      });
+    }
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
@@ -1450,7 +1573,7 @@ app.get("/:userId/listadvertisements", async (req, res) => {
 
 //====================== [ update list of advertisement Id ]=====================/
 
-app.put("/:userId/update-advertisements", async (req, res) => {
+app.put("/:userId/update-advertisements", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
     const userId = req.params.userId;
     const dataToUpdate = req.body;
@@ -1540,7 +1663,9 @@ app.post("/advertisementSettings", async (req, res) => {
   }
 });
 
-//====================== [ searching vendor ]==========================/
+//************************ [ Search Part ]*****************************/
+
+//====================== [ Searching vendor ]==========================/
 app.get('/vendorModels', async (req, res) => {
   const publisher_name = req.query.publisher_name;
   if (!publisher_name) {
@@ -1549,7 +1674,7 @@ app.get('/vendorModels', async (req, res) => {
 
   try {
     const filteredVendorModels = await VendorModel.find({
-      publisher_name: { $regex: new RegExp(publisher_name, 'i') }, // Case-insensitive match
+      publisher_name: { $regex: new RegExp(publisher_name, 'i') },
     });
 
     res.json(filteredVendorModels);
@@ -1558,7 +1683,90 @@ app.get('/vendorModels', async (req, res) => {
   }
 });
 
+//====================== [ Searching Role Base user with user_name ]==============/
+app.get("/Rolesearch", async (req, res) => {
+  const userName = req.query.userName;
 
+  try {
+    const user = await UserRoleModel.find({ user_name: userName });
+    if (user) {
+      res.status(201).json({
+        success: true,
+        message: 'user get successfully',
+        user
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//====================== [ Searching Role name ]=====================/
+app.get("/RoleNameSearch", async (req, res) => {
+  const role_name = req.query.role_name;
+
+  try {
+    const user = await RollCreation.find({ role_name: role_name });
+    if (user) {
+      res.status(201).json({
+        success: true,
+        message: 'Role Name get successfully',
+        user
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//====================== [ Searching Categories Name ]=====================/
+app.get("/CategorieNameSearch", async (req, res) => {
+  const categories_Name_English = req.query.categories_Name_English;
+
+  try {
+    const user = await MasterCategories.find({ categories_Name_English: categories_Name_English });
+    if (user) {
+      res.status(201).json({
+        success: true,
+        message: 'Categories Name get successfully',
+        user
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+//====================== [ Searching Tag Name ]=====================/
+app.get("/TagNameSearch", async (req, res) => {
+  const tag_name = req.query.tag_name;
+
+  try {
+    const user = await MasterTag.find({ tag_name: tag_name });
+    if (user) {
+      res.status(201).json({
+        success: true,
+        message: 'Tag Name get successfully',
+        user
+      });
+    } else {
+      res.status(404).json({ message: "Tag not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
+//************************ [ Templates Part ] *************************/
 //====================== [ Templates ]================================/
 app.use('/image', express.static('./uploads/image'));
 app.post('/templates', imageUpload.single('image'), async (req, res) => {
@@ -1608,7 +1816,7 @@ app.get('/gettemplates', async (req, res) => {
 });
 
 
-//====================== [ Epaper ]================================/
+//====================== [ E-paper ]================================/
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.fieldname === "image") {
@@ -1631,8 +1839,6 @@ const upload = multer({
     fileSize: 5000000000,
   },
 });
-
-
 // app.use('/image', express.static('./uploads/image'));
 app.use('/pdf', express.static('./uploads/pdf'));
 
@@ -1702,7 +1908,130 @@ app.get('/:userId/Epapers', async (req, res) => {
   }
 });
 
+//=======================[ Location ]==============================/
+app.post(
+  "/Locations",
+  async (req, res) => {
+    try {
+      let data = req.body;
+      let {
+        Country,
+        States,
+        Division,
+        District,
+        SubDivision,
+        Tahsil,
+        Town,
+        Hindi,
+        English,
+        URL
+      } = data;
 
+      if (await LocationModel.find({ Country: Country, States: States, Division: Division, District: District, SubDivision: SubDivision, Tahsil: Tahsil, Town: Town, })) {
+        res.status(400).send({
+          status: false,
+          message: "Already exist",
+        });
+      } else {
+        let Location = await LocationModel.create(data);
+        res.status(201).send({
+          status: true,
+          message: "Location Submit Successfully",
+          data: Location,
+        });
+      }
+
+    } catch (err) {
+      res.status(500).send({ status: false, error: err.message });
+    }
+  }
+);
+
+//======================[ Get Location]============================/
+app.get('/GetLocations', async (req, res) => {
+
+  try {
+    const locations = await LocationModel.find();
+
+    res.status(200).send({
+      status: true,
+      message: "Locations retrieved successfully",
+      data: locations,
+    });
+  } catch (err) {
+    res.status(500).send({ status: false, error: err.message });
+  }
+});
+
+//======================[ Update Location ]=====================/
+app.put(
+  "/:id/updateLocations",
+  async (req, res) => {
+    try {
+      let locationId = req.params.id;
+      let updatedData = req.body;
+
+      let updatedLocation = await LocationModel.findByIdAndUpdate(locationId, updatedData, { new: true });
+
+      if (updatedLocation) {
+        res.status(200).send({
+          status: true,
+          message: "Location updated successfully",
+          data: updatedLocation,
+        });
+      } else {
+        res.status(404).send({
+          status: false,
+          message: "Location not found",
+        });
+      }
+    } catch (err) {
+      res.status(500).send({ status: false, error: err.message });
+    }
+  }
+);
+
+//======================[ Delete Location ]=====================/
+app.delete(
+  "/:id/deleteLocations",
+  async (req, res) => {
+    try {
+      let locationId = req.params.id;
+
+      let deletedLocation = await LocationModel.findByIdAndDelete(locationId);
+
+      if (deletedLocation) {
+        res.status(200).send({
+          status: true,
+          message: "Location deleted successfully",
+          data: deletedLocation,
+        });
+      } else {
+        res.status(404).send({
+          status: false,
+          message: "Location not found",
+        });
+      }
+    } catch (err) {
+      res.status(500).send({ status: false, error: err.message });
+    }
+  }
+);
+
+
+//======================[ trial Api for post]===================/
+app.post("/state-country", async (req, res) => {
+  try {
+    const data = req.body;
+
+    const advertisementSettings = await StateModel.create(data);
+
+    res.status(201).json({ message: "AdvertisementSettings created successfully!", advertisementSettings: advertisementSettings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 
 module.exports = router;
