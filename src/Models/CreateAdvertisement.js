@@ -12,7 +12,10 @@ const CreateAdvertisementsSchema = new mongoose.Schema({
     script: { type: String, require: true },
     text: { type: String, require: true },
     type_of_ad: { type: String, require: true },
+<<<<<<< HEAD
     templates: { type: String, require: true },
+=======
+>>>>>>> origin/main
 
 }, { timestamps: true });
 

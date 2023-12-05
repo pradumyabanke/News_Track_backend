@@ -51,6 +51,9 @@ const authorization = async function (req, res, next) {
   }
 };
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/main
 module.exports = { jwtValidation, authorization };

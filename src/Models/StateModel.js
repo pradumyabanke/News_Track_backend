@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const stateSchema = new mongoose.Schema({
+<<<<<<< HEAD
     Country: { type: String, required: true },
     States: { type: String, required: true },
     Division: { type: String, required: true },
@@ -14,3 +15,17 @@ const stateSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Location", stateSchema)
+=======
+    countries: [{
+        country: {
+            type: String,
+            require: true
+        },
+        states: [{type: String,}]
+    }],
+});
+
+
+
+module.exports = mongoose.model("indian-states-cities", stateSchema)
+>>>>>>> origin/main

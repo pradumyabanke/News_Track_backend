@@ -20,7 +20,13 @@ const DraftModel = require("../Models/DraftModel");
 const RollCreation = require("../Models/Roll_CreationModel");
 const masterCategories = require("../Models/MasterCategories");
 const masterTag = require("../Models/MasterTagModel");
+<<<<<<< HEAD
 const CountryState = require("../Models/Country-State");
+=======
+const masterLocation = require("../Models/MasterLocation");
+
+
+>>>>>>> origin/main
 
 //===================== [ Create User ] =====================/
 
@@ -121,6 +127,7 @@ const userLogin = async function (req, res) {
 
 //===================== [ News Paper Agency Login ] =====================/
 
+<<<<<<< HEAD
 // const NewsPaperAgencyLogin = async function (req, res) {
 //   try {
 //     let data = req.body;
@@ -169,6 +176,8 @@ const userLogin = async function (req, res) {
 //     });
 //   }
 // };
+=======
+>>>>>>> origin/main
 const NewsPaperAgencyLogin = async function (req, res) {
   try {
     let data = req.body;
@@ -177,6 +186,7 @@ const NewsPaperAgencyLogin = async function (req, res) {
     let userExists = await VendorModel.findOne({ email: email });
 
     if (!userExists) {
+<<<<<<< HEAD
       let userRole = await UserRoleModel.findOne({ email: email });
       // let userId = req.query.userId;
       if (!userRole) {
@@ -229,6 +239,15 @@ const NewsPaperAgencyLogin = async function (req, res) {
 
     let compared = await bcrypt.compare(password, userExists.password);
 
+=======
+      return res.status(400).send({
+        status: false,
+        msg: "Email and Password is Invalid",
+      });
+    }
+
+    let compared = await bcrypt.compare(password, userExists.password);
+>>>>>>> origin/main
     if (!compared) {
       return res.status(400).send({
         status: false,
@@ -250,6 +269,7 @@ const NewsPaperAgencyLogin = async function (req, res) {
     );
     userExists.token = updateToken.token;
 
+<<<<<<< HEAD
     const pendingApprovals = await PostNewsModel.find({ userId: userExists._id, isApproved: false, isRejected: false });
 
     if (pendingApprovals.length > 0) {
@@ -265,6 +285,13 @@ const NewsPaperAgencyLogin = async function (req, res) {
         data: userExists,
       });
     }
+=======
+    return res.status(200).send({
+      status: true,
+      msg: "News Paper Agency Login successfully",
+      data: userExists,
+    });
+>>>>>>> origin/main
   } catch (error) {
     return res.status(500).send({
       status: false,
@@ -348,7 +375,10 @@ const UserLanguage = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ Create Article ] =====================/
 
 const CreateArticle = async function (req, res) {
@@ -376,8 +406,11 @@ const CreateArticle = async function (req, res) {
       schedule_date,
       approved_by,
       font,
+<<<<<<< HEAD
       publisher_time,
       publisher_date,
+=======
+>>>>>>> origin/main
     } = data;
 
     let Article = await PostArticleModel.create(data);
@@ -391,6 +424,7 @@ const CreateArticle = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
 
 //===================== [ Update Create Article ] =====================/
 
@@ -441,6 +475,60 @@ const CreateArticle = async function (req, res) {
 //     });
 //   }
 // }
+=======
+//===================== [ Update Create Article ] =====================/
+
+const UpdatePostArticle = async function (req, res) {
+  try {
+    let userId = req.params.userId;
+    let data = req.body;
+    let articleId = req.body._id;
+
+    let {
+      category,
+      title,
+      sub_heading,
+      short_details,
+      body,
+      image,
+      url,
+      tags,
+      news_priority,
+      news_sections,
+      change_byline,
+      source,
+      isApproved,
+      isRejected,
+      remark,
+      author_name,
+      schedule_time,
+      schedule_date,
+      approved_by,
+      font,
+    } = data;
+
+
+    let updatedArticle = await PostArticleModel.findByIdAndUpdate(
+      { _id: articleId, userId: userId },
+      data,
+      { new: true }
+    )
+
+    return res.status(200).send({
+      status: true,
+      message: "PostArticle Updated Successfully",
+      data: updatedArticle,
+    });
+
+  } catch (error) {
+    // Handle any errors that occur during the update or creation process
+    return res.status(500).send({
+      status: false,
+      error: "An error occurred",
+    });
+  }
+}
+>>>>>>> origin/main
 
 //===================== [ Media type ] ========================/
 
@@ -505,7 +593,11 @@ const SelectCategories = async function (req, res) {
 const getState = async (req, res) => {
   try {
     let country = req.body;
+<<<<<<< HEAD
     const city = await CountryState.find();
+=======
+    const city = await StateModel.find(country);
+>>>>>>> origin/main
 
     res
       .status(200)
@@ -515,6 +607,10 @@ const getState = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 //===================== [ Status Model ] =====================/
 
 const StatusModel = async function (req, res) {
@@ -538,6 +634,7 @@ const StatusModel = async function (req, res) {
 
 const getPostNews = async (req, res) => {
   try {
+<<<<<<< HEAD
     const userId = req.params.userId;
 
     const allPosts = await PostNewsModel.find({ isRejected: false, isApproved: false }).lean();
@@ -554,11 +651,38 @@ const getPostNews = async (req, res) => {
 
       post.username = authorName || publisherName;
     });
+=======
+    let data = req.body;
+    let userId = req.params.userId;
+    var allPosts = []
+    const getdata = await PostNewsModel.find().lean();
+    allPosts = getdata.filter(post => !post.isRejected && !post.isApproved);
+
+    for (let i = 0; i < allPosts.length; i++) {
+      const postUserId = allPosts[i].userId;
+      console.log(postUserId);
+
+      let user = await SuperAdmin.findById({ _id: postUserId });
+      if (user) {
+        allPosts[i].username = user.name;
+      } else {
+        let publication = await VendorModel.findById(postUserId);
+        if (publication) {
+          allPosts[i].username = publication.publisher_name;
+        }
+      }
+
+    }
+>>>>>>> origin/main
 
     res.status(200).send({ success: true, msg: "Post News Get Success", data: allPosts });
   } catch (error) {
     res.status(500).send({ success: false, msg: error.message });
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 };
 
 
@@ -574,10 +698,17 @@ const getPostNewsVendor = async (req, res) => {
 
     for (let i = 0; i < allPosts.length; i++) {
       const postUserId = allPosts[i].userId;
+<<<<<<< HEAD
+=======
+      // console.log(postUserId);
+
+      // Retrieve SuperAdmin by ID
+>>>>>>> origin/main
 
       let user = await SuperAdmin.findById({ _id: postUserId });
       if (user) {
         allPosts[i].username = user.name;
+<<<<<<< HEAD
       } else {
         let publication = await VendorModel.findById(postUserId);
         if (publication) {
@@ -605,6 +736,35 @@ const getPostNewsVendor = async (req, res) => {
 
 //==================== [ Update Post News ] ======================/
 
+=======
+        console.log(user.name);
+      } else {
+        let publication = await VendorModel.findById(postUserId);
+        if (publication) {
+          allPosts[i].username = publication.publisher_name;
+          // console.log(publication.publisher_name);
+        }
+      }
+
+    }
+
+    res.status(200).send({ 
+      success: true, 
+      msg: "Post News Get Success", 
+      data: allPosts 
+    });
+  } catch (error) {
+    res.status(500).send({ 
+      success: false, 
+      msg: error.message 
+    });
+  }
+
+};
+
+
+//==================== [ Update Post News ] ======================/
+>>>>>>> origin/main
 
 const updatePostNews = async (req, res) => {
   try {
@@ -753,6 +913,7 @@ const Roll_CreationModel = async function (req, res) {
     } = data;
     data.userId = userId;
 
+<<<<<<< HEAD
     const filteredData = {};
     for (const key in data) {
       if (data[key] === true) {
@@ -760,6 +921,8 @@ const Roll_CreationModel = async function (req, res) {
       }
     }
 
+=======
+>>>>>>> origin/main
     if (await RollCreation.findOne({ role_name: role_name }))
       return res.status(400).send({ message: "This Role name already exists" })
 
@@ -794,6 +957,7 @@ const getAllRoles = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
 
 //======================[ get list rolles ]======================//
 
@@ -945,6 +1109,10 @@ const deleteRollBase = async function (req, res) {
 
 
 //**************************[ Master Part ]***********************/
+=======
+//************************* [ Master Part ]***********************/
+
+>>>>>>> origin/main
 
 //================= [ Master Categories ] ==================/
 
@@ -1108,7 +1276,10 @@ const MasterTag = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //================= [ Update Master Tag ] ===================/
 
 const UpdateTag = async function (req, res) {
@@ -1142,7 +1313,10 @@ const UpdateTag = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //================= [ Delete Master Tag ] ===================/
 
 const DeleteTag = async function (req, res) {
@@ -1171,6 +1345,96 @@ const DeleteTag = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
+=======
+//================= [ Master Location ] ===================/
+
+const MasterLocation = async function (req, res) {
+  try {
+    let data = req.body;
+    let { countries, states, division, district, sub_division, tahsil, town, Hindi, English, url } = data;
+
+    let existingCountry = await masterLocation.findOne({ 'countries.name': countries.name });
+    console.log(existingCountry)
+
+    if (existingCountry) {
+      if (existingCountry.countries[0].states) {
+        let existingState = existingCountry.countries[0].states.find(state => state.name === states);
+
+        console.log(existingState)
+        if (!existingState) {
+          existingState = { name: states, divisions: [] };
+          existingCountry.states.push(existingState);
+          await existingCountry.save();
+        }
+      }
+    } else {
+      existingCountry = await masterLocation.create({ countries: { name: countries.name, states: [] } });
+
+    }
+
+    // let existingState = existingCountry.countries[0].states.find(state => state.name === states.name);
+    // console.log(existingState)
+    // if (!existingState) {
+    //   existingState = { name: states, divisions: [] };
+    //   existingCountry.states.push(existingState);
+    //   await existingCountry.save();
+    // }
+
+    // let existingDivision = existingState.divisions.find(div => div.name === division);
+
+    // if (!existingDivision) {
+    //   existingDivision = { name: division, districts: [] };
+    //   existingState.divisions.push(existingDivision);
+    //   await existingCountry.save();
+    // }
+
+    // let existingDistrict = existingDivision.districts.find(dist => dist.name === district);
+
+    // if (!existingDistrict) {
+    //   existingDistrict = { name: district, sub_divisions: [] };
+    //   existingDivision.districts.push(existingDistrict);
+    //   await existingCountry.save();
+    // }
+
+    // let existingSubDivision = existingDistrict.sub_divisions.find(subDiv => subDiv.name === sub_division);
+
+    // if (!existingSubDivision) {
+    //   existingSubDivision = { name: sub_division, tahsil: [] };
+    //   existingDistrict.sub_divisions.push(existingSubDivision);
+    //   await existingCountry.save();
+    // }
+
+    // let existingTahsil = existingSubDivision.tahsil.find(tah => tah.name === tahsil);
+
+    // if (!existingTahsil) {
+    //   existingTahsil = { name: tahsil, towns: [] };
+    //   existingSubDivision.tahsil.push(existingTahsil);
+    //   await existingCountry.save();
+    // }
+
+    // let existingTown = existingTahsil.towns.find(twn => twn.name === town);
+
+    // if (!existingTown) {
+    //   existingTown = { name: town, Hindi, English, url };
+    //   existingTahsil.towns.push(existingTown);
+    //   await existingCountry.save();
+    // }
+
+    return res.status(201).json({
+      status: true,
+      message: "Location created successfully",
+      data: existingState,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: error.message,
+    });
+  }
+
+};
+>>>>>>> origin/main
 
 //================= [ Get Master Categories ] ============/
 
@@ -1192,7 +1456,10 @@ const GetMasterCategories = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //================= [ Get Master Tag ] ================/
 
 const GetMasterTag = async function (req, res) {
@@ -1213,6 +1480,197 @@ const GetMasterTag = async function (req, res) {
   }
 };
 
+<<<<<<< HEAD
+=======
+//================= [ Get Master Location ] ==============/
+
+// const GetMasterLocation = async (req, res)=> {
+//   const { country } = req.query;
+
+//   if (!country) {
+//     return res.status(400).json({ error: 'Country parameter is missing.' });
+//   }
+
+//   try {
+//     const locations = await masterLocation.find({ countries: country });
+
+//     if (locations.length === 0) {
+//       return res.status(404).json({ error: 'Country not found.' });
+//     }
+
+//     // Extract states and cities from the locations
+//     const states = locations.map(location => location.states);
+//     const cities = locations.map(location => location.Town);
+
+//     res.json({ states, cities });
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).json({ error: 'Internal server error.' });
+//   }
+// };
+
+// const GetMasterLocation = async (req, res) => {
+//   try {
+//     let { country, state, division, district, sub_division, tahsil, town } = req.query;
+//     console.log(req.query)
+//     if (!country) {
+//       return res.status(400).json({ message: "Country parameter is required" });
+//     }
+
+//     let location = await masterLocation.findOne({
+//       "countries.name": country,
+//     });
+
+//     if (!location) {
+//       location = new MasterLocation({
+//         countries: {
+//           name: country,
+//           states: []
+//         }
+//       });
+//     }
+
+//     if (!state && !division && !district && !sub_division && !tahsil && !town) {
+//       const newState = {
+//         name: state,
+//         division: [
+//           {
+//             name: division,
+//             district: [
+//               {
+//                 name: district,
+//                 sub_division: [
+//                   {
+//                     name: sub_division,
+//                     tahsil: [
+//                       {
+//                         name: tahsil,
+//                         town: [
+//                           {
+//                             name: town
+//                           }
+//                         ]
+//                       }
+//                     ]
+//                   }
+//                 ]
+//               }
+//             ]
+//           }
+//         ]
+//       };
+
+//       location.countries.states.push(newState);
+//     }
+
+//     await location.save();
+
+//     res.json(location);
+//   } catch (error) {
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+const GetMasterLocation = async (req, res) => {
+  try {
+    let {
+      country,
+      states,
+      division,
+      district,
+      sub_division,
+      tahsil,
+      town
+    } = req.query;
+
+    if (!country) {
+      return res.status(400).json({ message: "Country parameter is required" });
+    }
+
+    let location = await masterLocation.findOne({
+      "countries.name": country,
+    });
+
+    if (!location) {
+      location = await masterLocation({
+        countries: {
+          name: country,
+          states: []
+        }
+      });
+    }
+
+    // Check if state exists
+    let stateObj = location.countries.states.find(s => s.name === states);
+    // console.log(stateObj)
+    if (!stateObj) {
+      stateObj = {
+        name: states,
+        division: []
+      };
+      location.countries.states.push(stateObj);
+    }
+
+    // Check if division exists
+    let divisionObj = stateObj.division.find(d => d.name === division);
+    if (!divisionObj) {
+      divisionObj = {
+        name: division,
+        district: []
+      };
+      stateObj.division.push(divisionObj);
+    }
+
+    // Check if district exists
+    let districtObj = divisionObj.district.find(dist => dist.name === district);
+    if (!districtObj) {
+      districtObj = {
+        name: district,
+        sub_division: []
+      };
+      divisionObj.district.push(districtObj);
+    }
+
+    // Check if sub-division exists
+    let subDivisionObj = districtObj.sub_division.find(subDiv => subDiv.name === sub_division);
+    if (!subDivisionObj) {
+      subDivisionObj = {
+        name: sub_division,
+        tahsil: []
+      };
+      districtObj.sub_division.push(subDivisionObj);
+    }
+
+    // Check if tahsil exists
+    let tahsilObj = subDivisionObj.tahsil.find(tah => tah.name === tahsil);
+    if (!tahsilObj) {
+      tahsilObj = {
+        name: tahsil,
+        town: []
+      };
+      subDivisionObj.tahsil.push(tahsilObj);
+    }
+
+    // Check if town exists
+    let townObj = tahsilObj.town.find(twn => twn.name === town);
+    if (!townObj) {
+      townObj = {
+        name: town
+      };
+      tahsilObj.town.push(townObj);
+    }
+
+    await location.save();
+
+    res.json(location);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+>>>>>>> origin/main
 
 module.exports = {
   createUser,
@@ -1232,6 +1690,7 @@ module.exports = {
   StatusModel,
   updateScheduleDateTime,
   AddRolesModel,
+<<<<<<< HEAD
   // UpdatePostArticle,
   getPostNewsVendor,
   RollbaseLogin,
@@ -1246,6 +1705,20 @@ module.exports = {
   MasterTag,
   GetMasterCategories,
   GetMasterTag,
+=======
+  UpdatePostArticle,
+  getPostNewsVendor,
+  Roll_CreationModel,
+  getAllRoles,
+  MasterCategories,
+  Mastercategories,
+  GetMasterCategoryById,
+  MasterLocation,
+  MasterTag,
+  GetMasterCategories,
+  GetMasterTag,
+  GetMasterLocation,
+>>>>>>> origin/main
   UpdateMasterCategory,
   DeleteMasterCategory,
   UpdateTag,

@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
+<<<<<<< HEAD
 const moment = require("moment");
+=======
+>>>>>>> origin/main
 
 const PostArticleSchema = new mongoose.Schema({
 
@@ -20,6 +23,7 @@ const PostArticleSchema = new mongoose.Schema({
     isRejected: { type: Boolean, default: false },
     remark: { type: String, default: " " },
     author_name: { type: String, require: true },
+<<<<<<< HEAD
     schedule_time: {
         type: String,
         default: function () {
@@ -32,6 +36,10 @@ const PostArticleSchema = new mongoose.Schema({
             return moment().format("YYYY-MM-DD");
         }
     },
+=======
+    schedule_time: { type: String, default: " " },
+    schedule_date: { type: String, default: " " },
+>>>>>>> origin/main
     approved_by: { type: String, default: " " },
     font: { type: String, require: true },
     x_min: { type: Number, require: true },
@@ -41,8 +49,11 @@ const PostArticleSchema = new mongoose.Schema({
     page_number: { type: Number, require: true },
     pdf_name: { type: String, require: true },
     date: { type: String, require: true },
+<<<<<<< HEAD
     manual_tag: { type: String, require: true },
 
+=======
+>>>>>>> origin/main
 
 
 }, { timestamps: true });

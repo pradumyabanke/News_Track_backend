@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 
+=======
+{ "countries": [
+>>>>>>> origin/main
    {
      "country": "Afghanistan",
      "alpha2Code": "AF",
@@ -1364,3 +1368,8 @@
      "numberCode": "716",
      "states": ["Bulawayo", "Harare", "Manicaland", "Mashonaland Central", "Mashonaland East", "Mashonaland West", "Masvingo", "Matabeleland North", "Matabeleland South", "Midlands"]
    }
+<<<<<<< HEAD
+=======
+ ]
+}
+>>>>>>> origin/main

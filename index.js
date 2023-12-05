@@ -13,7 +13,11 @@ const Middleware = require("./src/Middleware/auth");
 const UserRoleModel = require("./src/Models/User_RoleModel");
 const PostArticleModel = require("./src/Models/PostArticleModel");
 const VendorModel = require("./src/Models/VendorModel");
+<<<<<<< HEAD
 const RollCreation = require("./src/Models/Roll_CreationModel");
+=======
+const Addrolesmodel = require("./src/Models/Add_RolesModel");
+>>>>>>> origin/main
 const SuperAdmin = require("./src/Models/SuperAdmin");
 const DraftModel = require("./src/Models/DraftModel");
 const StateModel = require("./src/Models/StateModel");
@@ -22,11 +26,15 @@ const CreateAdvertisement = require("./src/Models/CreateAdvertisement");
 const VendorPageNameLocation = require("./src/Models/VendorPageModel");
 const Templates = require("./src/Models/templates");
 const Epaper = require("./src/Models/EpaperModel");
+<<<<<<< HEAD
 const AdvertisementSetting = require("./src/Models/AdvertisementSetting");
 const LocationModel = require("./src/Models/StateModel");
 const MasterCategories = require("./src/Models/MasterCategories");
 const MasterTag = require("./src/Models/MasterTagModel");
 const templates = require("./src/Models/templates");
+=======
+
+>>>>>>> origin/main
 
 const port = process.env.PORT || 5000;
 
@@ -111,7 +119,10 @@ app.post(
         schedule_time,
         schedule_date,
         approved_by,
+<<<<<<< HEAD
         manual_tag,
+=======
+>>>>>>> origin/main
         font,
         x_min,
         y_min,
@@ -121,7 +132,11 @@ app.post(
         pdf_name,
         date,
       } = data;
+<<<<<<< HEAD
       data.createdAt = new Date().toISOString();
+=======
+
+>>>>>>> origin/main
       data.userId = userId;
       if (file) {
         data.image = `/image/${file.filename}`;
@@ -138,6 +153,7 @@ app.post(
   }
 );
 
+<<<<<<< HEAD
 //======================[ update post Article ]========================/
 app.put(
   "/UpdateArticle",
@@ -198,6 +214,8 @@ app.put(
   }
 );
 
+=======
+>>>>>>> origin/main
 //======================[ Get post news with Id ]=========================/
 
 app.get("/:_id/get-post-news", async (req, res) => {
@@ -223,6 +241,7 @@ app.get("/:_id/get-post-news", async (req, res) => {
 });
 
 //====================== [ Get Post Article Category Wise] =======================/
+<<<<<<< HEAD
 const moment = require("moment");
 
 app.get("/:userId/get-Postnews/:category", async (req, res) => {
@@ -286,11 +305,55 @@ app.get("/:userId/get-Postnews/:category", async (req, res) => {
         data: [],
       });
     }
+=======
+
+app.get("/:userId/get-Postnews/:category", async (req, res) => {
+  try {
+    let data = req.body;
+    let userId = req.params.userId;
+    let file = req.file;
+    const category = req.params.category;
+    const articles = await PostArticleModel.find({ userId, category });
+    console.log(articles)
+    for (let i = 0; i < articles.length; i++) {
+      var schedule_date = articles[i].schedule_date;
+      var schedule_time = articles[i].schedule_time;
+    }
+    const date = new Date();
+
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = (date.getHours() % 12).toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    const currentDate = `${year}-${month}-${day}`
+    const currentTime = `${hours}:${minutes}`;
+
+    console.log(currentDate, "bbbb")
+    console.log(currentTime, "aaaa")
+
+    data.userId = userId;
+    if (file) {
+      data.image = `/image/${file.filename}`;
+    }
+
+    if (schedule_date == currentDate || schedule_time == currentTime) {
+      var approvedArticles = articles.filter(article => article.isApproved === true);
+    }
+
+    res.status(200).send({
+      status: true,
+      message: `News Articles with category '${category}' retrieved successfully`,
+      data: approvedArticles,
+    });
+>>>>>>> origin/main
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
 });
 
+<<<<<<< HEAD
 // Function to format dates as "DD/MM/YYYY" and times in "HH:mm" format in Indian time
 function formatDate(dateString) {
   const options = {
@@ -316,6 +379,8 @@ function formatTime(timeString) {
 }
 
 
+=======
+>>>>>>> origin/main
 //====================== [ Create Draft news ] ==================================/
 
 app.post(
@@ -380,6 +445,7 @@ app.get("/:userId/get-draft-articles", async (req, res) => {
   try {
     let userId = req.params.userId;
     let file = req.file;
+<<<<<<< HEAD
     let draftArticles = null;
 
     if (await SuperAdmin.findOne({ _id: userId }) || await VendorModel.findOne({ _id: userId })) {
@@ -419,16 +485,43 @@ app.get("/:userId/get-draft-articles", async (req, res) => {
         data: allPosts,
       });
     }
+=======
+    let draftArticles = null
+
+    if (await SuperAdmin.find({ userId })) {
+      draftArticles = await DraftModel.find({ isRejected: false });
+    } else if (await VendorModel.find({ userId })) {
+      draftArticles = await DraftModel.find({ isRejected: false });
+    }
+
+    draftArticles = draftArticles.map(article => {
+      if (file) {
+        data.image = `/image/${file.filename}`;
+      }
+      article.userId = userId;
+      return article;
+    });
+
+    res.status(200).send({
+      status: true,
+      message: "Draft Articles Retrieved Successfully",
+      data: draftArticles,
+    });
+>>>>>>> origin/main
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //====================== [ Get Draft Article for Vendor ] =================/
 
 app.get("/:userId/get-draft-articles-vendor", async (req, res) => {
   try {
+<<<<<<< HEAD
     const userId = req.params.userId;
     const file = req.file;
     let draftArticles = null;
@@ -479,6 +572,29 @@ app.get("/:userId/get-draft-articles-vendor", async (req, res) => {
         message: "No draft articles found for the given user.",
       });
     }
+=======
+    let userId = req.params.userId;
+    let file = req.file;
+    let draftArticles = null
+
+    if (await VendorModel.find({ userId })) {
+      draftArticles = await DraftModel.find({ userId });
+    }
+
+    draftArticles = draftArticles.map(article => {
+      if (file) {
+        data.image = `/image/${file.filename}`;
+      }
+      article.userId = userId;
+      return article;
+    });
+
+    res.status(200).send({
+      status: true,
+      message: "Draft Articles Retrieved Successfully",
+      data: draftArticles,
+    });
+>>>>>>> origin/main
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
@@ -526,8 +642,13 @@ app.post("/user-role", imageUpload.single("user_image"), async (req, res) => {
       city,
       mobile_1,
       mobile_2,
+<<<<<<< HEAD
       email,
       email_1,
+=======
+      email_1,
+      email_2,
+>>>>>>> origin/main
       user_image,
       user_BIO,
       social_facebook,
@@ -541,20 +662,34 @@ app.post("/user-role", imageUpload.single("user_image"), async (req, res) => {
         .status(400)
         .send({ status: false, message: "Mobile_1 already exist" });
 
+<<<<<<< HEAD
     if (await UserRoleModel.findOne({ email: email }))
       return res
         .status(400)
         .send({ status: false, message: "Email already exist" });
+=======
+    if (await UserRoleModel.findOne({ email_1: email_1 }))
+      return res
+        .status(400)
+        .send({ status: false, message: "Email_1 already exist" });
+>>>>>>> origin/main
 
     if (await UserRoleModel.findOne({ mobile_2: mobile_2 }))
       return res
         .status(400)
         .send({ status: false, message: "Mobile_2 already exist" });
 
+<<<<<<< HEAD
     if (await UserRoleModel.findOne({ email_1: email_1 }))
       return res
         .status(400)
         .send({ status: false, message: "Email_1 already exist" });
+=======
+    if (await UserRoleModel.findOne({ email_2: email_2 }))
+      return res
+        .status(400)
+        .send({ status: false, message: "Email_2 already exist" });
+>>>>>>> origin/main
 
     const encryptedPassword = bcrypt.hashSync(password, 12);
     req.body["password"] = encryptedPassword;
@@ -591,8 +726,13 @@ app.post("/user-role", imageUpload.single("user_image"), async (req, res) => {
         city: savedData.city,
         mobile_1: savedData.mobile_1,
         mobile_2: savedData.mobile_2,
+<<<<<<< HEAD
         email: savedData.email,
         email_1: savedData.email_1,
+=======
+        email_1: savedData.email_1,
+        email_2: savedData.email_2,
+>>>>>>> origin/main
         user_image: savedData.user_image,
         user_BIO: savedData.user_BIO,
         social_facebook: savedData.social_facebook,
@@ -713,7 +853,10 @@ app.post(
   }
 );
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ Update Publication Details ] ================/
 
 app.put("/:userId/update_publication", imageUpload.fields([
@@ -733,6 +876,7 @@ app.put("/:userId/update_publication", imageUpload.fields([
         .send({ status: false, message: "User not found" });
     }
 
+<<<<<<< HEAD
     if (newData.password) {
 
       const hashedPassword = await bcrypt.hash(newData.password, 10);
@@ -742,6 +886,10 @@ app.put("/:userId/update_publication", imageUpload.fields([
 
     for (const key in newData) {
       if (key !== "password") {
+=======
+    for (const key in newData) {
+      if (newData.hasOwnProperty(key)) {
+>>>>>>> origin/main
         existingPublication[key] = newData[key];
       }
     }
@@ -754,7 +902,10 @@ app.put("/:userId/update_publication", imageUpload.fields([
         existingPublication.logo_small = `/image/${files.logo_small[0].filename}`;
       }
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
     const updatedPublication = await existingPublication.save();
 
     const safePublicationDetails = { ...updatedPublication._doc };
@@ -808,6 +959,7 @@ app.put("/:userId/ApprovalupdateNews", Middleware.jwtValidation, Middleware.auth
     let schedule_time = req.body.schedule_time;
     let schedule_date = req.body.schedule_date;
 
+<<<<<<< HEAD
     let News = await PostArticleModel.findById(postNewsId);
 
     if (!News) {
@@ -840,17 +992,43 @@ app.put("/:userId/ApprovalupdateNews", Middleware.jwtValidation, Middleware.auth
         status: false,
         message: "Post was not updated. Invalid request."
       });
+=======
+    let News = await PostArticleModel.findById({ _id: postNewsId });
+
+    let user = await SuperAdmin.findById({ _id: userId }).lean();
+    if (user) {
+      News.approved_by = user.name;
+    } else {
+      let publication = await VendorModel.findById({ _id: userId }).lean();
+      if (publication) {
+        News.approved_by = publication.publisher_name;
+      }
+    }
+
+    if (News.isApproved == false) {
+      var updateNews = await PostArticleModel.findByIdAndUpdate(
+        { _id: postNewsId },
+        { $set: { isApproved: true, schedule_time: schedule_time, schedule_date: schedule_date } },
+        { new: true }
+      );
+>>>>>>> origin/main
     }
 
     return res.status(200).send({
       status: true,
       message: "Post Update Successfully",
+<<<<<<< HEAD
       isApproved: isApproved
     });
+=======
+      isApproved: updateNews.isApproved
+    })
+>>>>>>> origin/main
 
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
+<<<<<<< HEAD
 });
 
 
@@ -883,6 +1061,53 @@ app.get("/:userId/getApproval", Middleware.jwtValidation, Middleware.authorizati
       res.status(200).send({
         status: true,
         message: "No approved post news found for the user.",
+=======
+
+})
+
+app.get("/:userId/getApproval", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+  try {
+    var data = req.body;
+    var userId = req.params.userId;
+
+    const response = await PostArticleModel.find().lean();
+
+    if (response.length > 0) {
+      const approvedPosts = response.filter((post) => post.isApproved && !post.isRejected);
+
+      if (approvedPosts.length > 0) {
+        for (let i = 0; i < approvedPosts.length; i++) {
+          const postUserId = approvedPosts[i].userId;
+
+          let user = await SuperAdmin.findById({ _id: postUserId }).lean();
+          if (user) {
+            approvedPosts[i].username = user.name;
+          } else {
+            let publication = await VendorModel.findById({ _id: postUserId }).lean();
+            if (publication) {
+              approvedPosts[i].username = publication.publisher_name;
+            }
+          }
+
+        }
+
+        res.status(200).send({
+          status: true,
+          message: "Get Post News Successfully",
+          data: approvedPosts,
+        });
+      } else {
+        res.status(200).send({
+          status: true,
+          message: "No approved post news found for the user.",
+          data: [],
+        });
+      }
+    } else {
+      res.status(200).send({
+        status: true,
+        message: "No post news found for the user.",
+>>>>>>> origin/main
         data: [],
       });
     }
@@ -895,6 +1120,7 @@ app.get("/:userId/getApproval", Middleware.jwtValidation, Middleware.authorizati
   }
 });
 
+<<<<<<< HEAD
 
 app.get("/:userId/getApprovalVendor", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
@@ -933,6 +1159,50 @@ app.get("/:userId/getApprovalVendor", Middleware.jwtValidation, Middleware.autho
       res.status(200).send({
         status: true,
         message: "No approved post news found for the user.",
+=======
+app.get("/:userId/getApprovalVendor", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+  try {
+    var data = req.body;
+    var userId = req.params.userId;
+
+    const response = await PostArticleModel.find({ userId }).lean();
+
+    if (response.length > 0) {
+      const approvedPosts = response.filter((post) => post.isApproved && !post.isRejected);
+
+      if (approvedPosts.length > 0) {
+        for (let i = 0; i < approvedPosts.length; i++) {
+          const postUserId = approvedPosts[i].userId;
+
+          let user = await SuperAdmin.findById({ _id: postUserId }).lean();
+          if (user) {
+            approvedPosts[i].username = user.name;
+          } else {
+            let publication = await VendorModel.findById({ _id: postUserId }).lean();
+            if (publication) {
+              approvedPosts[i].username = publication.publisher_name;
+            }
+          }
+
+        }
+
+        res.status(200).send({
+          status: true,
+          message: "Get Post News Successfully",
+          data: approvedPosts,
+        });
+      } else {
+        res.status(200).send({
+          status: true,
+          message: "No approved post news found for the user.",
+          data: [],
+        });
+      }
+    } else {
+      res.status(200).send({
+        status: true,
+        message: "No post news found for the user.",
+>>>>>>> origin/main
         data: [],
       });
     }
@@ -945,15 +1215,26 @@ app.get("/:userId/getApprovalVendor", Middleware.jwtValidation, Middleware.autho
   }
 });
 
+<<<<<<< HEAD
 
 // ===================== [ Reject And Update ] =====================/
+=======
+//===================== [ Reject And Update ] =====================/
+>>>>>>> origin/main
 
 app.put("/:userId/RejectUpdateNews", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
     let postNewsId = req.body._id;
     let data = req.body.remark;
+<<<<<<< HEAD
     if (await PostArticleModel.findById({ _id: postNewsId })) {
       let News = await PostArticleModel.findById({ _id: postNewsId });
+=======
+
+    if (await PostArticleModel.findById({ _id: postNewsId })) {
+      let News = await PostArticleModel.findById({ _id: postNewsId });
+
+>>>>>>> origin/main
       if (News.isRejected == false) {
         var updateNews = await PostArticleModel.findByIdAndUpdate(
           { _id: postNewsId },
@@ -983,6 +1264,7 @@ app.put("/:userId/RejectUpdateNews", Middleware.jwtValidation, Middleware.author
   }
 })
 
+<<<<<<< HEAD
 
 app.get("/:userId/getRejected", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
@@ -1012,18 +1294,66 @@ app.get("/:userId/getRejected", Middleware.jwtValidation, Middleware.authorizati
       res.status(200).send({
         status: true,
         message: "No rejected post news found for the user.",
+=======
+app.get("/:userId/getRejected", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+  try {
+    const data = req.body;
+    const userId = req.params.userId;
+
+    const response = await PostArticleModel.find().lean();
+
+    if (response.length > 0) {
+      const rejectedPosts = response.filter((post) => post.isRejected && !post.isApproved);
+
+      if (rejectedPosts.length > 0) {
+        for (let i = 0; i < rejectedPosts.length; i++) {
+          const postUserId = rejectedPosts[i].userId;
+          let user = await SuperAdmin.findById({ _id: postUserId }).lean();
+          if (user) {
+            rejectedPosts[i].username = user.name;
+          } else {
+            let publication = await VendorModel.findById({ _id: postUserId }).lean();
+            if (publication) {
+              rejectedPosts[i].username = publication.publisher_name;
+              // console.log(publication.publisher_name);
+            }
+          }
+        }
+
+        res.status(200).send({
+          status: true,
+          message: "Get Post News Successfully",
+          data: rejectedPosts,
+        });
+      } else {
+        res.status(200).send({
+          status: true,
+          message: "No rejected post news found for the user.",
+          data: [],
+        });
+      }
+    } else {
+      res.status(200).send({
+        status: true,
+        message: "No post news found for the user.",
+>>>>>>> origin/main
         data: [],
       });
     }
   } catch (error) {
     res.status(500).send({
       status: false,
+<<<<<<< HEAD
       message: "An error occurred while retrieving rejected post news.",
+=======
+      message: "An error occurred while retrieving post news.",
+>>>>>>> origin/main
       error: error.message,
     });
   }
 });
 
+<<<<<<< HEAD
 
 app.get("/:userId/getRejectedVendor", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
   try {
@@ -1062,13 +1392,59 @@ app.get("/:userId/getRejectedVendor", Middleware.jwtValidation, Middleware.autho
       res.status(200).send({
         status: true,
         message: "No rejected post news found for the user.",
+=======
+app.get("/:userId/getRejectedVendor", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+  try {
+    const data = req.body;
+    const userId = req.params.userId;
+
+    const response = await PostArticleModel.find({ userId }).lean();
+
+    if (response.length > 0) {
+      const rejectedPosts = response.filter((post) => post.isRejected && !post.isApproved);
+
+      if (rejectedPosts.length > 0) {
+        for (let i = 0; i < rejectedPosts.length; i++) {
+          const postUserId = rejectedPosts[i].userId;
+          let user = await SuperAdmin.findById({ _id: postUserId }).lean();
+          if (user) {
+            rejectedPosts[i].username = user.name;
+          } else {
+            let publication = await VendorModel.findById({ _id: postUserId }).lean();
+            if (publication) {
+              rejectedPosts[i].username = publication.publisher_name;
+            }
+          }
+        }
+
+        res.status(200).send({
+          status: true,
+          message: "Get Post News Successfully",
+          data: rejectedPosts,
+        });
+      } else {
+        res.status(200).send({
+          status: true,
+          message: "No rejected post news found for the user.",
+          data: [],
+        });
+      }
+    } else {
+      res.status(200).send({
+        status: true,
+        message: "No post news found for the user.",
+>>>>>>> origin/main
         data: [],
       });
     }
   } catch (error) {
     res.status(500).send({
       status: false,
+<<<<<<< HEAD
       message: "An error occurred while retrieving rejected post news.",
+=======
+      message: "An error occurred while retrieving post news.",
+>>>>>>> origin/main
       error: error.message,
     });
   }
@@ -1092,7 +1468,10 @@ app.get("/:userId/getAddRoles", Middleware.jwtValidation, Middleware.authorizati
   }
 })
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ Get Add Roles Update ] ================/
 
 // app.put("/:userId/updateAddRoles", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
@@ -1184,7 +1563,10 @@ app.put("/:userId/updateAddRoles", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ Get All Vendor List ]==================/
 
 app.get("/VendorList", async (req, res) => {
@@ -1197,7 +1579,10 @@ app.get("/VendorList", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ delete Vendor ]==================/
 app.delete("/:userId/deleteVendor", async (req, res) => {
   const userId = req.params.userId;
@@ -1223,7 +1608,10 @@ app.delete("/:userId/deleteVendor", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ Get All Vendor List ]==================/
 
 app.get("/UserRoleList", async (req, res) => {
@@ -1236,7 +1624,10 @@ app.get("/UserRoleList", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ delete User Role ]===============/
 app.delete("/:userId/deleteUserRole", async (req, res) => {
   const userId = req.params.userId;
@@ -1261,7 +1652,10 @@ app.delete("/:userId/deleteUserRole", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ Get All Vendor List with fields ]==================/
 
 app.get("/UserRoleListfield", async (req, res) => {
@@ -1284,7 +1678,10 @@ app.get("/UserRoleListfield", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //===================== [ update All Vendor List fields ]==================/
 
 app.put("/updateUserRolelist/:id", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
@@ -1297,6 +1694,7 @@ app.put("/updateUserRolelist/:id", Middleware.jwtValidation, Middleware.authoriz
       { $set: updateFields },
       { new: true }
     );
+<<<<<<< HEAD
     if (updateFields.password) {
 
       const hashedPassword = await bcrypt.hash(updateFields.password, 10);
@@ -1305,12 +1703,18 @@ app.put("/updateUserRolelist/:id", Middleware.jwtValidation, Middleware.authoriz
     }
 
     const updateRole = await userRole.save();
+=======
+>>>>>>> origin/main
 
     if (!userRole) {
       return res.status(404).json({ error: "User role not found" });
     }
 
+<<<<<<< HEAD
     res.json(updateRole);
+=======
+    res.json(userRole);
+>>>>>>> origin/main
   } catch (error) {
     console.error("Error updating user role:", error);
     res.status(500).json({ error: "An error occurred while updating user role" });
@@ -1323,6 +1727,7 @@ app.put("/updateUserRolelist/:id", Middleware.jwtValidation, Middleware.authoriz
 app.get("/:userId/getBreakingNews", async (req, res) => {
   try {
     var userId = req.params.userId;
+<<<<<<< HEAD
     const currentDate = new Date();
     const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
     const formattedTime = `${currentDate.getHours().toString().padStart(2, '0')}:${currentDate.getMinutes().toString().padStart(2, '0')}`;
@@ -1354,6 +1759,18 @@ app.get("/:userId/getBreakingNews", async (req, res) => {
         data: [],
       });
     }
+=======
+    const response = await PostArticleModel.find({ userId: userId, isApproved: true, isRejected: false, news_priority: "Breaking" })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    res.status(200).send({
+      status: true,
+      message: "Get Breaking News Successfully",
+      data: response,
+    });
+>>>>>>> origin/main
   } catch (error) {
     res.status(500).send({
       status: false,
@@ -1363,8 +1780,11 @@ app.get("/:userId/getBreakingNews", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/main
 //=====================[ Get Categories List ]======================/
 
 app.get("/categories", async (req, res) => {
@@ -1385,7 +1805,10 @@ app.get("/categories", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 //=====================[ delete Categories ]======================/
 
 app.delete("/:userId/deletecategories", async (req, res) => {
@@ -1443,8 +1866,11 @@ app.patch('/update-categories/:id', async (req, res) => {
 app.use("/image", express.static("./uploads/image"))
 app.post(
   "/:userId/create-advertisement",
+<<<<<<< HEAD
   Middleware.jwtValidation,
   Middleware.authorization,
+=======
+>>>>>>> origin/main
   imageUpload.single("image"),
   async (req, res) => {
     try {
@@ -1460,27 +1886,37 @@ app.post(
         script,
         text,
         type_of_ad,
+<<<<<<< HEAD
         templates,
+=======
+>>>>>>> origin/main
       } = data;
 
       data.userId = userId;
       if (file) {
         data.image = `/image/${file.filename}`;
       }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
       let createdAdvertisement = await CreateAdvertisement.create(data);
       res.status(201).send({
         status: true,
         message: "Post News Created Successfully",
         data: createdAdvertisement,
       });
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
     } catch (err) {
       res.status(500).send({ status: false, error: err.message });
     }
   }
 );
 
+<<<<<<< HEAD
 
 //========================[ Get Advertisement ]====================/
 
@@ -1521,17 +1957,28 @@ app.post(
 // });
 
 
+=======
+//========================[ Get Advertisement ]====================/
+
+>>>>>>> origin/main
 app.get("/:userId/:page_name/:page_location/get-Advertisement", async (req, res) => {
   try {
     let page_name = req.params.page_name;
     let page_location = req.params.page_location;
+<<<<<<< HEAD
     let userId = req.params.userId;
     let file = req.file;
     let data = req.body;
+=======
+    let data = req.body;
+    let userId = req.params.userId;
+    let file = req.file;
+>>>>>>> origin/main
     const post = await CreateAdvertisement.find({ userId: userId, page_name: page_name, page_location: page_location })
       .sort({ createdAt: -1 })
       .limit(1)
       .lean();
+<<<<<<< HEAD
     console.log(post)
     if (!post || post.length === 0) {
       const defaultAds = await CreateAdvertisement.find({ userId: "null" }).lean();
@@ -1557,15 +2004,34 @@ app.get("/:userId/:page_name/:page_location/get-Advertisement", async (req, res)
       res.status(200).send({ status: true, data: post });
 
     }
+=======
+
+    if (!post) {
+      return res.status(404).send({ status: false, message: "Post not found" });
+    }
+
+    data.userId = userId;
+    if (file) {
+      data.image = `/image/${file.filename}`;
+    }
+
+    res.status(200).send({ status: true, data: post });
+>>>>>>> origin/main
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
 });
 
+<<<<<<< HEAD
 
 //=======================[ vendor post pageName & pageLocation ]========
 
 app.post("/:userId/vendorPageNameLocations", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+=======
+//=======================[ vendor post pageName & pageLocation ]========
+
+app.post("/:userId/vendorPageNameLocations", async (req, res) => {
+>>>>>>> origin/main
   try {
     let userId = req.params.userId;
     let data = req.body;
@@ -1577,7 +2043,11 @@ app.post("/:userId/vendorPageNameLocations", Middleware.jwtValidation, Middlewar
     if (existingAdvertisement) {
       return res.status(409).send({
         status: false,
+<<<<<<< HEAD
         message: "Vendor Permission Allready set",
+=======
+        message: "Vendor Permission Allready set ",
+>>>>>>> origin/main
       });
     }
 
@@ -1594,10 +2064,16 @@ app.post("/:userId/vendorPageNameLocations", Middleware.jwtValidation, Middlewar
   }
 });
 
+<<<<<<< HEAD
 
 //=======================[ Get vendor post pageName & pageLocation ]========
 
 app.get("/:userId/getvendorPageNameLocations", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+=======
+//=======================[ Get vendor post pageName & pageLocation ]========
+
+app.get("/:userId/getvendorPageNameLocations", async (req, res) => {
+>>>>>>> origin/main
   try {
     const userId = req.params.userId;
     const vendorPageNameLocations = await VendorPageNameLocation.find({ userId });
@@ -1613,6 +2089,7 @@ app.get("/:userId/getvendorPageNameLocations", Middleware.jwtValidation, Middlew
   }
 });
 
+<<<<<<< HEAD
 
 //====================== [Vendor list of advertisement Id ]=====================/
 
@@ -1659,6 +2136,20 @@ app.get("/listadvertisements", async (req, res) => {
         data: advertisements,
       });
     }
+=======
+//====================== [ list of advertisement Id ]=====================/
+
+app.get("/:userId/listadvertisements", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const advertisements = await CreateAdvertisement.find({ userId }); // Assuming your model name is CreateAdvertisement
+
+    res.status(200).send({
+      status: true,
+      message: "Advertisements retrieved successfully",
+      data: advertisements,
+    });
+>>>>>>> origin/main
   } catch (err) {
     res.status(500).send({ status: false, error: err.message });
   }
@@ -1666,7 +2157,11 @@ app.get("/listadvertisements", async (req, res) => {
 
 //====================== [ update list of advertisement Id ]=====================/
 
+<<<<<<< HEAD
 app.put("/:userId/update-advertisements", Middleware.jwtValidation, Middleware.authorization, async (req, res) => {
+=======
+app.put("/:userId/update-advertisements", async (req, res) => {
+>>>>>>> origin/main
   try {
     const userId = req.params.userId;
     const dataToUpdate = req.body;
@@ -1722,6 +2217,7 @@ app.delete("/:userId/delete-advertisements", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 
 //======================[ Advertisement Setting ]=========================/
 app.post("/advertisementSettings", async (req, res) => {
@@ -1761,6 +2257,9 @@ app.post("/advertisementSettings", async (req, res) => {
 //************************ [ Search Part ]*****************************/
 
 //====================== [ Searching vendor ]==========================/
+=======
+//====================== [ searching vendor ]==========================/
+>>>>>>> origin/main
 app.get('/vendorModels', async (req, res) => {
   const publisher_name = req.query.publisher_name;
   if (!publisher_name) {
@@ -1769,7 +2268,11 @@ app.get('/vendorModels', async (req, res) => {
 
   try {
     const filteredVendorModels = await VendorModel.find({
+<<<<<<< HEAD
       publisher_name: { $regex: new RegExp(publisher_name, 'i') },
+=======
+      publisher_name: { $regex: new RegExp(publisher_name, 'i') }, // Case-insensitive match
+>>>>>>> origin/main
     });
 
     res.json(filteredVendorModels);
@@ -1779,6 +2282,7 @@ app.get('/vendorModels', async (req, res) => {
 });
 
 
+<<<<<<< HEAD
 //====================== [ Searching Role Base user with user_name ]==============/
 app.get("/Rolesearch", async (req, res) => {
   const userName = req.query.userName;
@@ -1897,6 +2401,8 @@ app.get("/EpaperSearch", async (req, res) => {
 
 
 //************************ [ Templates Part ] *************************/
+=======
+>>>>>>> origin/main
 //====================== [ Templates ]================================/
 app.use('/image', express.static('./uploads/image'));
 app.post('/templates', imageUpload.single('image'), async (req, res) => {
@@ -1946,7 +2452,11 @@ app.get('/gettemplates', async (req, res) => {
 });
 
 
+<<<<<<< HEAD
 //====================== [ E-paper ]================================/
+=======
+//====================== [ Epaper ]================================/
+>>>>>>> origin/main
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.fieldname === "image") {
@@ -1963,13 +2473,21 @@ const storage = multer.diskStorage({
   },
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5000000000,
   },
 });
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> origin/main
 // app.use('/image', express.static('./uploads/image'));
 app.use('/pdf', express.static('./uploads/pdf'));
 
@@ -2009,6 +2527,7 @@ app.post('/:userId/Epaper',
   }
 );
 
+<<<<<<< HEAD
 //====================== [ Get Epaper Vendor List ]==============================/
 // app.get('/:userId/Epapers', async (req, res) => {
 //   try {
@@ -2038,18 +2557,28 @@ app.post('/:userId/Epaper',
 //   }
 // });
 
+=======
+//====================== [ Get Epaper ]==============================/
+>>>>>>> origin/main
 app.get('/:userId/Epapers', async (req, res) => {
   try {
     const userId = req.params.userId;
 
+<<<<<<< HEAD
     const epapers = await Epaper.find({ userId }).sort({ createdAt: -1 }).lean();
 
     if (!epapers || epapers.length === 0) {
+=======
+    const epapers = await Epaper.find({ userId });
+
+    if (!epapers) {
+>>>>>>> origin/main
       return res.status(404).json({
         success: false,
         message: 'No Epapers found for the specified user.',
       });
     }
+<<<<<<< HEAD
     const results = [];
 
     for (const epaper of epapers) {
@@ -2134,11 +2663,17 @@ app.get('/AdminEpapers', async (req, res) => {
 
       return epaper;
     }));
+=======
+>>>>>>> origin/main
 
     res.status(200).json({
       success: true,
       message: 'Epapers retrieved successfully',
+<<<<<<< HEAD
       epapers: results,
+=======
+      epapers,
+>>>>>>> origin/main
     });
   } catch (error) {
     res.status(500).json({
@@ -2150,6 +2685,7 @@ app.get('/AdminEpapers', async (req, res) => {
 });
 
 
+<<<<<<< HEAD
 //====================== [ update Epaper ]==============================/
 app.put("/:userId/updateEpaper/:id", upload.fields([{ name: "pdf", maxCount: 5 }]), async (req, res) => {
   try {
@@ -2338,6 +2874,8 @@ app.post("/state-country", async (req, res) => {
   }
 });
 
+=======
+>>>>>>> origin/main
 
 module.exports = router;
 
