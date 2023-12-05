@@ -28,7 +28,6 @@ const MasterCategories = require("./src/Models/MasterCategories");
 const MasterTag = require("./src/Models/MasterTagModel");
 const templates = require("./src/Models/templates");
 
-
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -122,7 +121,7 @@ app.post(
         pdf_name,
         date,
       } = data;
-
+      data.createdAt = new Date().toISOString();
       data.userId = userId;
       if (file) {
         data.image = `/image/${file.filename}`;
@@ -231,25 +230,19 @@ app.get("/:userId/get-Postnews/:category", async (req, res) => {
     let userId = req.params.userId;
     const category = req.params.category;
     const currentDate = new Date();
-
     const localDateOptions = {
-      year: '2-digit', // Two-digit year
+      year: '2-digit',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true, // Set this to true to use 12-hour time format
-      timeZone: 'Asia/Kolkata', // Set the timezone to Indian Standard Time (IST)
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
     };
-
     const localDateFormat = new Intl.DateTimeFormat(undefined, localDateOptions);
     const localDateParts = localDateFormat.formatToParts(currentDate);
-
     const formattedDate = `${localDateParts[0].value}/${localDateParts[2].value}/${localDateParts[4].value}`;
-    const formattedTime = `${localDateParts[6].value}:${localDateParts[8].value} ${localDateParts[10].value}`;
-
-    // console.log(formattedDate);
-
+    const formattedTime = `${localDateParts[6].value}:${localDateParts[8].value}:${localDateParts[10].value}`;
     const articles = await PostArticleModel.find({
       userId,
       category,
@@ -257,32 +250,29 @@ app.get("/:userId/get-Postnews/:category", async (req, res) => {
       isRejected: false,
     }).sort({ createdAt: -1 })
       .lean();
-    console.log(articles)
     const filteredArticles = articles.filter(article => {
-      // Format the database date and time fields to the same format
-      const articleDate = formatDate(article.schedule_date);
-      const articleTime = formatTime(article.schedule_time);
-      console.log(articleDate);
-      console.log(articleTime);
-      console.log(formattedDate, "local");
-      console.log(formattedTime, "local");
-
-
-      const filteredArticles = articles.filter(article => {
-        const articleDate = formatDate(article.schedule_date);
-        const articleTime = formatTime(article.schedule_time);
-
-        if (
-          (articleDate === formattedDate && articleTime === formattedTime) ||
-          (articleDate < formattedDate && articleTime < formattedTime)
-        ) {
-          return true;
-        } else {
-          return false;
-        }
-      });
+      var dateString = formattedDate;
+      var dateComponents = dateString.split('/');
+      var day = parseInt(dateComponents[0], 10);
+      var month = parseInt(dateComponents[1], 10) - 1;
+      var year = 2000 + parseInt(dateComponents[2], 10);
+      var currentDate = new Date(year, month, day);
+      var dateString = article.schedule_date;
+      var dateComponents = dateString.split('-');
+      var year = parseInt(dateComponents[0], 10);
+      var month = parseInt(dateComponents[1], 10) - 1;
+      var day = parseInt(dateComponents[2], 10);
+      var articleDate = new Date(year, month, day);
+      console.log("localtime----", formattedTime)
+      console.log("sheduletime-----", article.schedule_time);
+      let articleTime = article.schedule_time;
+      if (currentDate >= articleDate && formattedTime >= articleTime) {
+        return true;
+      }
+      else {
+        return false;
+      }
     });
-
     if (filteredArticles.length > 0) {
       res.status(200).send({
         status: true,
@@ -324,8 +314,6 @@ function formatTime(timeString) {
   const time = new Date(`2023-11-06T${timeString}`);
   return time.toLocaleTimeString(undefined, options);
 }
-
-
 
 
 //====================== [ Create Draft news ] ==================================/
@@ -495,8 +483,6 @@ app.get("/:userId/get-draft-articles-vendor", async (req, res) => {
     res.status(500).send({ status: false, error: err.message });
   }
 });
-
-
 
 //===================== [ Draft Delete Article ] =======================/
 
@@ -847,7 +833,7 @@ app.put("/:userId/ApprovalupdateNews", Middleware.jwtValidation, Middleware.auth
 
     let isApproved = false;
     if (News.isApproved === false || News.isApproved === true) {
-      await PostArticleModel.findByIdAndUpdate(postNewsId, { $set: { isApproved: true, schedule_time: schedule_time || formattedTime, schedule_date: schedule_date || formattedDate } }, { new: true });
+      await PostArticleModel.findByIdAndUpdate(postNewsId, { $set: { isApproved: true, schedule_time: schedule_time || formattedTime, schedule_date: schedule_date || formattedDate, createdAt: new Date().toISOString(), } }, { new: true });
       isApproved = true;
     } else {
       return res.status(200).send({

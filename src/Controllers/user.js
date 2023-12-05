@@ -292,6 +292,7 @@ const CreatePlateform = async function (req, res) {
   }
 };
 
+
 //===================== [ Create Categories ] =====================/
 
 const CreateCategories = async function (req, res) {
@@ -309,6 +310,7 @@ const CreateCategories = async function (req, res) {
     res.status(500).send({ status: false, error: err.message });
   }
 };
+
 
 //===================== [ Create SubCategories ] =====================/
 
